@@ -24,6 +24,9 @@ let u_PointSize;
 let u_FragColor;
 let g_SelectedColor = [1.0, 0.0, 0.0, 1.0];
 let g_PointSize = 10.0;
+let shapesList = [];
+let currentShape = 'point'; // point/triangle/circle
+let currentSegmentCount = 10;
 
 function main() {
 
@@ -35,8 +38,9 @@ function main() {
 
 
   // EVENT HANDLERS
-  // click function to be called on a mouse down event
+  // click function to be called on a mouse down and mouse move events
   canvas.onmousedown = (ev) => {click(ev)};
+  canvas.onmousemove = (ev) => { if (ev.buttons==1) {click(ev)}};
   // ui events
   addUIEvents();
 
@@ -56,20 +60,48 @@ function click(ev) {
   // get gl coordinates of click
   let [x, y] = convertEventCoordsToGL(ev);
 
-  // Store the coordinates to g_points array
-  g_points.push([x, y]);
+  if (currentShape === 'point') {
+    // make new point object, passing in position, size, and color
+    let p = new Point([x, y], g_PointSize, g_SelectedColor.slice());
+    // add point to shapes list
+    shapesList.push(p);
+  } else if (currentShape === 'triangle') {
+    // make new triangle obj
+    let t = new Triangle([x, y], g_PointSize, g_SelectedColor.slice());
+    // add triangle to shapes list
+    shapesList.push(t);
+  } else if (currentShape === 'circle') {
+    // make new circle obj
+    let c = new Circle([x, y], g_PointSize, g_SelectedColor.slice(), currentSegmentCount);
+    // add circle to shapes list
+    shapesList.push(c);
+  } else if (currentShape === 'line') {
+    
+  }
 
-  // store the color to g_colors array
-  g_colors.push(g_SelectedColor.slice());
-
-  // store current size to g_sizes array
-  g_sizes.push(g_PointSize);
-  console.log(g_sizes)
-
-  renderAllShapes(gl, g_points, g_colors);
+  // re-render everything to show new point
+  renderAllShapes();
 }
 
 function addUIEvents() {
+  // CLEAR BUTTON
+  let clear_button = document.getElementById("clear_button");
+  clear_button.addEventListener('click', () => {
+    shapesList = [];
+    renderAllShapes();
+  })
+
+  // DRAWING MODE BUTTONS
+  let squares_button = document.getElementById("squares_button");
+  squares_button.addEventListener('click', () => {currentShape = 'point'});
+  let triangles_button = document.getElementById("triangles_button");
+  triangles_button.addEventListener('click', () => {currentShape = 'triangle'; console.log('triangle');});
+  let circles_button = document.getElementById("circles_button");
+  circles_button.addEventListener('click', () => {currentShape = 'circle'});
+  let line_tool_button = document.getElementById("line_tool_button");
+  line_tool_button.addEventListener('click', () => {currentShape = 'line'});
+
+
   // RGB SLIDERS
   let red_slider = document.getElementById("red_slider");
   let green_slider = document.getElementById("green_slider");
@@ -83,6 +115,10 @@ function addUIEvents() {
   let size_slider = document.getElementById("size_slider");
   size_slider.addEventListener('mouseup', () => { g_PointSize = parseInt(size_slider.value); });
 
+  // CIRCLE SEGMENT SLIDER
+  let segment_slider = document.getElementById("segment_slider");
+  segment_slider.addEventListener('mouseup', () => { currentSegmentCount = parseInt(segment_slider.value); });
+
 }
 
 function setupWebGL() {
@@ -90,7 +126,7 @@ function setupWebGL() {
   canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  gl = getWebGLContext(canvas);
+  gl = canvas.getContext("webgl", { preserveDrawingBuffer: true});
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -143,19 +179,8 @@ function convertEventCoordsToGL(ev) {
 function renderAllShapes() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-
-  var len = g_points.length;
-  for(var i = 0; i < len; i++) {
-    var xy = g_points[i];
-    var rgba = g_colors[i];
-
-    // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
-    // Pass the size of a point to u_PointSize variable
-    gl.uniform1f(u_PointSize, g_sizes[i]);
-    // Pass the color of a point to u_FragColor variable
-    gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-    // Draw
-    gl.drawArrays(gl.POINTS, 0, 1);
+  
+  for (let i = 0; i < shapesList.length; i++) {
+    shapesList[i].render(gl, a_Position, u_PointSize, u_FragColor);
   }
 }
