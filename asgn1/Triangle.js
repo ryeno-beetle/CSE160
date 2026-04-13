@@ -17,7 +17,7 @@ class Triangle extends Shape {
     }
 
     render(gl, a_Position, u_PointSize, u_FragColor) {
-        this.drawTriangle(gl, a_Position, u_PointSize, u_FragColor, this.vertices);
+        this.drawTriangle(gl, a_Position, u_PointSize, u_FragColor, this.vertices, this.rgba);
     }
 
 }

@@ -26,7 +26,7 @@ class Shape {
         gl.enableVertexAttribArray(a_Position);
     }
 
-    drawTriangle(gl, a_Position, u_PointSize, u_FragColor, triVertices) {
+    drawTriangle(gl, a_Position, u_PointSize, u_FragColor, triVertices, color) {
         let vertices = new Float32Array(triVertices);
 
         this.makeGLBuffer(gl, a_Position, vertices);
@@ -34,7 +34,7 @@ class Shape {
         // Pass the size of a point to u_PointSize variable
         gl.uniform1f(u_PointSize, this.size);
         // Pass the color of the triangle to u_FragColor variable
-        gl.uniform4f(u_FragColor, this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
+        gl.uniform4f(u_FragColor, color[0], color[1], color[2], color[3]);
         // draw triangle
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }

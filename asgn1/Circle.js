@@ -22,7 +22,7 @@ class Circle extends Shape {
     render(gl, a_Position, u_PointSize, u_FragColor) {
         for (let i = 0; i < this.segmentCount; i++) {
             let triVertices = this.vertices.slice(i*6, i*6 + 6);
-            this.drawTriangle(gl, a_Position, u_PointSize, u_FragColor, triVertices);
+            this.drawTriangle(gl, a_Position, u_PointSize, u_FragColor, triVertices, this.rgba);
         }
     }
 

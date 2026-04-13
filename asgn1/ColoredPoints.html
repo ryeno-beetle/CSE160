@@ -9,19 +9,24 @@
     <canvas id="webgl" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
+    <img src="snufkin_triangles.png" style="height: 400px"/>
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
     <script src="lib/cuon-utils.js"></script>
+    <script src="lib/cuon-matrix-cse160.js"></script>
     <script src="Shape.js"></script>
     <script src="Point.js"></script>
     <script src="Triangle.js"></script>
     <script src="Circle.js"></script>
+    <script src="Line.js"></script>
+    <script src="Drawing.js"></script>
     <script src="ColoredPoints.js"></script>
 
     <div id="ui">
       <div>
         <button id="clear_button">clear canvas</button>
+        <button id="add_drawing_button">add picture</button>
       </div>
       <div>
         <h3>drawing mode:</h3>
@@ -45,6 +50,11 @@
           <input type="range" min="0" max="300" value="10" class="slider" id="size_slider"/>
           <label>(circles) segment count: </label>
           <input type="range" min="5" max="50" value="10" class="slider" id="segment_slider"/>
+        </div>
+        <div>
+          <h3>info for graders:</h3>
+          <p>awesome thing: i made a line tool! you can click once to start drawing a line, and click somewhere else to finish drawing the line.</p>
+          <p>picture note: in the physical drawing, i accidentally made the top half one box too tall, which is why the clouds are a little squished, but everything else should match.</p>
         </div>
       </div>
     </div>

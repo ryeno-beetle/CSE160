@@ -27,6 +27,7 @@ let g_PointSize = 10.0;
 let shapesList = [];
 let currentShape = 'point'; // point/triangle/circle
 let currentSegmentCount = 10;
+let currentLine = null;
 
 function main() {
 
@@ -40,7 +41,13 @@ function main() {
   // EVENT HANDLERS
   // click function to be called on a mouse down and mouse move events
   canvas.onmousedown = (ev) => {click(ev)};
-  canvas.onmousemove = (ev) => { if (ev.buttons==1) {click(ev)}};
+  canvas.onmousemove = (ev) => { 
+    if (ev.buttons==1) {
+      click(ev);
+    } else if (currentLine != null) {
+      moveWhenDrawingLine(ev);
+    }
+  };
   // ui events
   addUIEvents();
 
@@ -76,10 +83,25 @@ function click(ev) {
     // add circle to shapes list
     shapesList.push(c);
   } else if (currentShape === 'line') {
-    
+    if (currentLine === null) {
+      // make new line obj
+      let l = new Line([x, y], g_PointSize, g_SelectedColor.slice());
+      // add line to shapes list
+      shapesList.push(l);
+      currentLine = l;
+    } else {
+      currentLine = null;
+    }
   }
 
   // re-render everything to show new point
+  renderAllShapes();
+}
+
+function moveWhenDrawingLine(ev) {
+  // get gl coordinates of mouse
+  let [x2, y2] = convertEventCoordsToGL(ev);
+  currentLine.calculateVertices(x2, y2);
   renderAllShapes();
 }
 
@@ -89,7 +111,16 @@ function addUIEvents() {
   clear_button.addEventListener('click', () => {
     shapesList = [];
     renderAllShapes();
-  })
+  });
+
+  // ADD DRAWING BUTTON
+  let add_drawing_button = document.getElementById("add_drawing_button");
+  add_drawing_button.addEventListener('click', () => {
+    let d = new Drawing();
+    shapesList = []; // clear shapes list for performance, since everything will be covered by the drawing anyways
+    shapesList.push(d);
+    d.render(gl, a_Position, u_PointSize, u_FragColor);
+  });
 
   // DRAWING MODE BUTTONS
   let squares_button = document.getElementById("squares_button");
