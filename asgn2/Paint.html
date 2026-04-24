@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>paint!</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <script src="lib/webgl-utils.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+    <script src="lib/cuon-utils.js"></script>
+    <script src="lib/cuon-matrix-cse160.js"></script>
+    <script src="Shape.js"></script>
+    <script src="Point.js"></script>
+    <script src="Triangle.js"></script>
+    <script src="Circle.js"></script>
+    <script src="Line.js"></script>
+    <script src="Drawing.js"></script>
+    <script src="Cube.js"></script>
+    <script src="Polygon.js"></script>
+    <script src="BlockyAnimal.js"></script>
+
+    <div id="ui">
+      <div>
+        <div>
+          <label>angle:</label>
+          <input type="range" min="0" max="90" value="5" class="slider" id="angle_slider"/>
+          <label>green(middle):</label>
+          <input type="range" min="-45" max="45" value="0" class="slider" id="middle_slider"/>
+          <label>blue(top):</label>
+          <input type="range" min="-45" max="45" value="0" class="slider" id="top_slider"/>
+        </div>
+        <div>
+          <label>animation:</label>
+          <button type="button" id="anim_toggle_button">ON/OFF</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
