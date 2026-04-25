@@ -27,7 +27,8 @@ let u_GlobalRotateMatrix;
 // webgl obj to pass to cubes
 let wgl;
 // params
-let g_globalAngle = 5.0;
+let g_globalAngle_y = -20;
+let g_globalAngle_x = 45;
 let g_middleAngle = 0;
 let g_topAngle = 0;
 var g_middleAnim = false;
@@ -65,8 +66,12 @@ function main() {
 function addUIEvents() {
   // ANGLE SLIDER
   // TODO: add mouseup mousedown events so it's not always calling
-  let angle_slider = document.getElementById("angle_slider");
-  angle_slider.addEventListener('mousemove', () => { g_globalAngle = parseInt(angle_slider.value); renderScene(); });
+  let angle_y_slider = document.getElementById("angle_y_slider");
+  angle_y_slider.addEventListener('mousemove', () => { g_globalAngle_y = parseInt(angle_y_slider.value); renderScene(); });
+
+   let angle_x_slider = document.getElementById("angle_x_slider");
+  angle_x_slider.addEventListener('mousemove', () => { g_globalAngle_x = parseInt(angle_x_slider.value); renderScene(); });
+
 
   // MIDDLE CUBE SLIDER
   // TODO: add mouseup mousedown events so it's not always calling
@@ -160,35 +165,36 @@ function updateAnimAngles() {
 function renderScene() {
 
   // pass matrix to u_GlobalRotateMatrix attribute
-  var globalRotMat = new Matrix4().rotate(g_globalAngle, 0, 1, 0);
+  var globalRotMat = new Matrix4().rotate(g_globalAngle_y, 0, 1, 0);
+  globalRotMat.rotate(g_globalAngle_x, 1, 0, 0);
   gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  
-
+  var body = new Body(wgl, [255, 0, 0, 1]);
+  body.render();
   // draw the hand cube
-  var body = new Cube(wgl, [255, 0, 0, 1]);
-  body.matrix.setTranslate(-.25, -.5, 0.0);
-  body.matrix.scale(0.3, 0.3, 0.5);
-  body.render(gl, a_Position, u_FragColor);
+  // var body = new Cube(wgl, [255, 0, 0, 1]);
+  // //body.matrix.setTranslate(-.25, -.5, 0.0);
+  // body.matrix.scale(0.5, 0.5, 0.5);
+  // body.render(gl, a_Position, u_FragColor);
 
-  // draw a left arm
-  var leftArm = new Cube(wgl, [0, 255, 0, 1]);
-  leftArm.matrix.setTranslate(-.15, -.2, .1);
-  leftArm.matrix.rotate(-g_middleAngle, 0, 0, 1);
-  var middleCoords = new Matrix4(leftArm.matrix);
-  leftArm.matrix.scale(0.3, 0.6, 0.25);
-  leftArm.render(gl, a_Position, u_FragColor);
+  // // draw a left arm
+  // var leftArm = new Cube(wgl, [0, 255, 0, 1]);
+  // leftArm.matrix.setTranslate(-.15, -.2, .1);
+  // leftArm.matrix.rotate(-g_middleAngle, 0, 0, 1);
+  // var middleCoords = new Matrix4(leftArm.matrix);
+  // leftArm.matrix.scale(0.3, 0.6, 0.25);
+  // leftArm.render(gl, a_Position, u_FragColor);
   
-  // draw a left shoulder
-  var leftShoulder = new Cube(wgl, [0, 0, 255, 1]);
-  leftShoulder.matrix = middleCoords;
-  leftShoulder.matrix.translate(.1, .4, -.1);
-  leftShoulder.matrix.rotate(45-g_topAngle, 0, 0, 1);
-  leftShoulder.matrix.scale(0.3, 0.3, 0.4);
-  leftShoulder.render(gl, a_Position, u_FragColor);
+  // // draw a left shoulder
+  // var leftShoulder = new Cube(wgl, [0, 0, 255, 1]);
+  // leftShoulder.matrix = middleCoords;
+  // leftShoulder.matrix.translate(.1, .4, -.1);
+  // leftShoulder.matrix.rotate(45-g_topAngle, 0, 0, 1);
+  // leftShoulder.matrix.scale(0.3, 0.3, 0.4);
+  // leftShoulder.render(gl, a_Position, u_FragColor);
 
 }
 
