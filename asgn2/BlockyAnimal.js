@@ -1,6 +1,13 @@
 //TODO!!!!!
 // make sliders update with angles while animation plays so that things don't snap
-
+/*
+[] There is a complete animal, with at least 8 parts. Color on most of the body in a way that looks nice.
+[] At least one joint angle is controllable with sliders. Joint rotates around a point, no shearing or other weirdness.
+[] Slider control of all joints in the animal
+[] Animation on most of the animal, and it moves in a natural way
+[] Poke with shift-click for a different animation
+[] Performance optimization and indicator.
+*/
 // ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
 var VSHADER_SOURCE = `
@@ -34,12 +41,19 @@ let g_globalAngle_y = 0;
 let g_globalAngle_x = 0;
 let g_middleAngle = 0;
 let g_topAngle = 0;
-var animating = false;
+
+let puppycat;
 
 // TIME
 var g_startTime = performance.now();
 var g_seconds = performance.now() - g_startTime;
 
+// mouse pos
+let mouseDown = false;
+let initial_x = 0;
+let initial_y = 0;
+let initialAngle_x = 0;
+let initialAngle_y = 0;
 function main() {
 
   // set up webgl
@@ -51,7 +65,22 @@ function main() {
 
   // EVENT HANDLERS
   // click function to be called on a mouse down event
-  //canvas.onmousedown = (ev) => {click(ev)};
+  canvas.onmousedown = (ev) => {
+    mouseDown = true
+    initial_x = ev.clientX;
+    initial_y = ev.clientY;
+    initialAngle_y = g_globalAngle_y;
+    initialAngle_x = g_globalAngle_x;
+  };
+  canvas.onmouseup = (ev) => {mouseDown = false;}
+  canvas.onmousemove = (ev) => {
+    if (mouseDown) {
+      g_globalAngle_y = initialAngle_y + (initial_x - ev.clientX);
+      g_globalAngle_x = initialAngle_x + (initial_y - ev.clientY);
+      console.log(g_globalAngle_x);
+      renderScene();
+    }
+  }
 
   // ui events
   addUIEvents();
@@ -61,6 +90,8 @@ function main() {
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
+
+  puppycat = new PuppyCat(wgl);
 
   // render
   renderScene();
@@ -72,22 +103,33 @@ function addUIEvents() {
   let angle_y_slider = document.getElementById("angle_y_slider");
   angle_y_slider.addEventListener('mousemove', () => { g_globalAngle_y = parseInt(angle_y_slider.value); renderScene(); });
 
-   let angle_x_slider = document.getElementById("angle_x_slider");
+  let angle_x_slider = document.getElementById("angle_x_slider");
   angle_x_slider.addEventListener('mousemove', () => { g_globalAngle_x = parseInt(angle_x_slider.value); renderScene(); });
 
+  // LEGS
+  // RIGHT
+  let right_leg_slider = document.getElementById("right_leg_slider");
+  right_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_top = [parseInt(right_leg_slider.value), 0, 0]; renderScene(); });
+  
+  let right_knee_slider = document.getElementById("right_knee_slider");
+  right_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_bottom = [parseInt(right_knee_slider.value), 0, 0]; renderScene(); });
 
-  // MIDDLE CUBE SLIDER
-  // TODO: add mouseup mousedown events so it's not always calling
-  let middle_slider = document.getElementById("middle_slider");
-  middle_slider.addEventListener('mousemove', () => { g_middleAngle = parseInt(middle_slider.value); renderScene(); });
+  let right_ankle_slider = document.getElementById("right_ankle_slider");
+  right_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_right = [parseInt(right_ankle_slider.value), 0, 0]; renderScene(); });
 
-  // top CUBE SLIDER
-  // TODO: add mouseup mousedown events so it's not always calling
-  let top_slider = document.getElementById("top_slider");
-  top_slider.addEventListener('mousemove', () => { g_topAngle = parseInt(top_slider.value); renderScene(); });
+  // LEFT
+  let left_leg_slider = document.getElementById("left_leg_slider");
+  left_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_top = [parseInt(left_leg_slider.value), 0, 0]; renderScene(); });
+  
+  let left_knee_slider = document.getElementById("left_knee_slider");
+  left_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_bottom = [parseInt(left_knee_slider.value), 0, 0]; renderScene(); });
+
+  let left_ankle_slider = document.getElementById("left_ankle_slider");
+  left_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_left = [parseInt(left_ankle_slider.value), 0, 0]; renderScene(); });
+  
 
   let anim_toggle_button = document.getElementById("anim_toggle_button");
-  anim_toggle_button.addEventListener('click', () => { animating = !animating; requestAnimationFrame(tick); });
+  anim_toggle_button.addEventListener('click', () => { puppycat.animating = !puppycat.animating; requestAnimationFrame(tick); });
 }
 
 function setupWebGL() {
@@ -175,7 +217,6 @@ function renderScene() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  var puppycat = new PuppyCat(wgl);
   puppycat.render(g_startTime, g_seconds);
   // draw the hand cube
   // var body = new Cube(wgl, [255, 0, 0, 1]);
@@ -213,7 +254,7 @@ function tick() {
   renderScene();
 
   // tell browser to update again when it has time
-  if (animating) {
+  if (puppycat.animating) {
     requestAnimationFrame(tick);
   }
 }
