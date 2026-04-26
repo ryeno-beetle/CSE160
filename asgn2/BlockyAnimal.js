@@ -1,3 +1,6 @@
+//TODO!!!!!
+// make sliders update with angles while animation plays so that things don't snap
+
 // ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
 var VSHADER_SOURCE = `
@@ -27,15 +30,15 @@ let u_GlobalRotateMatrix;
 // webgl obj to pass to cubes
 let wgl;
 // params
-let g_globalAngle_y = -20;
-let g_globalAngle_x = 45;
+let g_globalAngle_y = 0;
+let g_globalAngle_x = 0;
 let g_middleAngle = 0;
 let g_topAngle = 0;
-var g_middleAnim = false;
+var animating = false;
 
 // TIME
-var g_startTime = performance.now() / 1000.0;
-var g_seconds = performance.now() / 1000.0 - g_startTime;
+var g_startTime = performance.now();
+var g_seconds = performance.now() - g_startTime;
 
 function main() {
 
@@ -84,7 +87,7 @@ function addUIEvents() {
   top_slider.addEventListener('mousemove', () => { g_topAngle = parseInt(top_slider.value); renderScene(); });
 
   let anim_toggle_button = document.getElementById("anim_toggle_button");
-  anim_toggle_button.addEventListener('click', () => { g_middleAnim = !g_middleAnim; requestAnimationFrame(tick); });
+  anim_toggle_button.addEventListener('click', () => { animating = !animating; requestAnimationFrame(tick); });
 }
 
 function setupWebGL() {
@@ -155,11 +158,11 @@ function convertEventCoordsToGL(ev) {
   return [x, y];
 }
 
-function updateAnimAngles() {
-  if (g_middleAnim) {
-    g_middleAngle = 45*Math.sin(g_seconds);
-  }
-}
+// function updateAnimAngles() {
+//   if (g_middleAnim) {
+//     g_middleAngle = 45*Math.sin(g_seconds);
+//   }
+// }
 
 // render everything !
 function renderScene() {
@@ -172,8 +175,8 @@ function renderScene() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  var body = new Body(wgl, [255, 0, 0, 1]);
-  body.render();
+  var puppycat = new PuppyCat(wgl);
+  puppycat.render(g_startTime, g_seconds);
   // draw the hand cube
   // var body = new Cube(wgl, [255, 0, 0, 1]);
   // //body.matrix.setTranslate(-.25, -.5, 0.0);
@@ -201,19 +204,16 @@ function renderScene() {
 // called by browser repeatedly whenever its time
 function tick() {
   // save current time
-  g_seconds = performance.now() / 1000.0 - g_startTime;
+  g_seconds = performance.now() - g_startTime;
 
   // print so we know we are running
-  console.log(performance.now());
-
-  // update animation angles
-  updateAnimAngles();
+  //console.log(performance.now());
 
   // draw everything
   renderScene();
 
   // tell browser to update again when it has time
-  if (g_middleAnim) {
+  if (animating) {
     requestAnimationFrame(tick);
   }
 }

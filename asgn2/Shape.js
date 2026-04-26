@@ -1,74 +1,41 @@
 class Shape {
-    constructor(point, size, rgba) {
-        this.point = point;
-        this.size = size;
+    constructor(wgl, vertices, rgba) {
+        this.wgl = wgl;
         this.rgba = rgba;
-        this.vertices = point;
+        this.vertices = new Float32Array(vertices);
+        this.vertexBuffer = null;
     }
 
-    makeGLBuffer(gl, a_Position, vertices) {
+    makeGLBuffer3D() {
         // Create a buffer object
-        var vertexBuffer = gl.createBuffer();
-        if (!vertexBuffer) {
+        this.vertexBuffer = this.wgl.gl.createBuffer();
+       
+        if (!this.vertexBuffer) {
             console.log('Failed to create the buffer object');
             return -1;
         }
-
-        // Bind the buffer object to target
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        // Write date into the buffer object
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
-
-        // Assign the buffer object to a_Position variable
-        gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-
-        // Enable the assignment to a_Position variable
-        gl.enableVertexAttribArray(a_Position);
     }
 
-    drawTriangle(gl, a_Position, u_PointSize, u_FragColor, triVertices, color) {
-        let vertices = new Float32Array(triVertices);
-
-        this.makeGLBuffer(gl, a_Position, vertices);
-
-        // Pass the size of a point to u_PointSize variable
-        gl.uniform1f(u_PointSize, this.size);
-        // Pass the color of the triangle to u_FragColor variable
-        gl.uniform4f(u_FragColor, color[0], color[1], color[2], color[3]);
-        // draw triangle
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-    }
-
-    makeGLBuffer3D(gl, a_Position, vertices) {
-        // Create a buffer object
-        var vertexBuffer = gl.createBuffer();
-        if (!vertexBuffer) {
-            console.log('Failed to create the buffer object');
-            return -1;
+    render() {
+        if (!this.vertexBuffer) {
+            this.makeGLBuffer3D();
         }
 
-        // Bind the buffer object to target
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        // Write date into the buffer object
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
-
-        // Assign the buffer object to a_Position variable
-        gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
-
         // Enable the assignment to a_Position variable
-        gl.enableVertexAttribArray(a_Position);
-    }
+        this.wgl.gl.enableVertexAttribArray(this.wgl.a_Position);
+        
+        // Bind the buffer object to target
+        this.wgl.gl.bindBuffer(this.wgl.gl.ARRAY_BUFFER, this.vertexBuffer);
 
-    drawTriangle3D(gl, a_Position, u_PointSize, u_FragColor, triVertices, color) {
-        let vertices = new Float32Array(triVertices);
+        // Write date into the buffer object
+        this.wgl.gl.bufferData(this.wgl.gl.ARRAY_BUFFER, this.vertices, this.wgl.gl.STATIC_DRAW);
 
-        this.makeGLBuffer3D(gl, a_Position, vertices);
-
-        // Pass the size of a point to u_PointSize variable
-        gl.uniform1f(u_PointSize, this.size);
+        // Assign the buffer object to aPosition variable
+        this.wgl.gl.vertexAttribPointer(this.wgl.a_Position, 3, this.wgl.gl.FLOAT, false, 0, 0);
+        
         // Pass the color of the triangle to u_FragColor variable
-        gl.uniform4f(u_FragColor, color[0], color[1], color[2], color[3]);
-        // draw triangle
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        this.wgl.gl.uniform4f(this.wgl.u_FragColor, this.rgba[0], this.rgba[1], this.rgba[2], 1);
+
+        this.wgl.gl.drawArrays(this.wgl.gl.TRIANGLES, 0, this.vertices.length / 3);
     }
 }
