@@ -3,6 +3,8 @@ class PuppyCat {
         this.wgl = wgl;
         this.angles = {
             body: [0, 0, 0],
+            arm_left: [0, 0, 0],
+            arm_right: [0, 0, 0],
             leg_left_top: [0, 0, 0],
             leg_left_bottom: [0, 0, 0],
             foot_left: [0, 0, 0],
@@ -19,25 +21,56 @@ class PuppyCat {
     makeParts() {
         let white = [255, 232, 232, 1];
         let brown = [138, 66, 82, 1];
+        let pink = [255, 150, 187, 1];
+        let yellow = [255, 188, 94];
         this.parts = {
             body: new Body(this.wgl, white),
+            collar: new Body(this.wgl, pink),
+            bell: new Body(this.wgl, yellow),
+            bell_hole_top: new Cube(this.wgl, brown),
+            bell_hole_bottom: new Cube(this.wgl, brown),
+            // HEAD
             head: new Body(this.wgl, white),
+            ear_left: new Body(this.wgl, brown),
+            ear_left_inner: new Body(this.wgl, pink),
+            ear_right: new Body(this.wgl, brown),
+            ear_right_inner: new Body(this.wgl, pink),
+            // face
+            eye_left: new Cube(this.wgl, brown),
+            eye_right: new Cube(this.wgl, brown),
+            mouth_right: new Cube(this.wgl, brown),
+            mouth_left: new Cube(this.wgl, brown),
+            nose: new Cube(this.wgl, brown),
+            // LEFT ARM
+            arm_left: new Body(this.wgl, white),
+            hand_left: new Body(this.wgl, brown),
+            // RIGHT ARM
+            arm_right: new Body(this.wgl, white),
+            hand_right: new Body(this.wgl, brown),
             // LEFT LEG
-            leg_left_top: new Cube(this.wgl, white),
-            leg_left_bottom: new Cube(this.wgl, white),
-            foot_left: new Cube(this.wgl, brown),
+            leg_left_top: new Body(this.wgl, white),
+            leg_left_bottom: new Body(this.wgl, white),
+            foot_left: new Body(this.wgl, brown),
             // RIGHT LEG
-            leg_right_top: new Cube(this.wgl, white),
-            leg_right_bottom: new Cube(this.wgl, white),
-            foot_right: new Cube(this.wgl, brown),
+            leg_right_top: new Body(this.wgl, white),
+            leg_right_bottom: new Body(this.wgl, white),
+            foot_right: new Body(this.wgl, brown),
         }
-        this.parts.leg_left_top.setOrigin([0.5, 1, 0.5]);
-        this.parts.leg_left_bottom.setOrigin([0.5, 1, 0]);
-        this.parts.foot_left.setOrigin([0.5, 1, 0.5]);
+        // this.parts.leg_left_top.setOrigin([0.5, 1, 0.5]);
+        // this.parts.leg_left_bottom.setOrigin([0.5, 1, 0]);
+        // this.parts.foot_left.setOrigin([0.5, 1, 0.5]);
 
-        this.parts.leg_right_top.setOrigin([0.5, 1, 0.5]);
-        this.parts.leg_right_bottom.setOrigin([0.5, 1, 0]);
-        this.parts.foot_right.setOrigin([0.5, 1, 0.5]);
+        this.parts.leg_left_top.setOrigin([0.34, 0, 0.34]);
+        this.parts.leg_left_bottom.setOrigin([0.34, 0, 0.34]);
+        this.parts.foot_left.setOrigin([0.34, 0.8, 0.34]);
+
+        // this.parts.leg_right_top.setOrigin([0.5, 1, 0.5]);
+        // this.parts.leg_right_bottom.setOrigin([0.5, 1, 0]);
+        // this.parts.foot_right.setOrigin([0.5, 1, 0.5]);
+
+        this.parts.leg_right_top.setOrigin([0.34, 0, 0.34]);
+        this.parts.leg_right_bottom.setOrigin([0.34, 0, 0.34]);
+        this.parts.foot_right.setOrigin([0.34, 0.8, 0.34]);
 
         this.transformParts();
     }
@@ -57,34 +90,201 @@ class PuppyCat {
         let tm_body = new Matrix4(m_body); // translation matrix for body
         //m_body.scale(0.9, 0.9, 0.9);
 
+        // COLLAR 
+        this.parts.collar.matrix = new Matrix4(tm_body);
+        let m_collar = this.parts.collar.matrix;
+        m_collar.translate(0, 0.43, 0);
+        m_collar.scale(1, 0.3, 1);
+
+        // BELL
+        // THE BIG ROUND MAIN YELLOW PART
+        this.parts.bell.matrix = new Matrix4(tm_body);
+        let m_bell = this.parts.bell.matrix;
+        m_bell.translate(0.13, 0.45, 0.02);
+        let tm_bell = new Matrix4(m_bell);
+        m_bell.rotate(-80, 1, 0, 0);
+        m_bell.rotate(45, 0, 1, 0);
+        m_bell.scale(0.4, 0.25, 0.4);
+
+        // LITTLE ROUND HOLE
+        this.parts.bell_hole_top.matrix = new Matrix4(tm_bell);
+        let m_bell_hole_top = this.parts.bell_hole_top.matrix;
+        m_bell_hole_top.translate(0.119, -0.03, -0.19);
+        m_bell_hole_top.rotate(10, 1, 0, 0);
+        m_bell_hole_top.scale(0.1, 0.05, 0.05);
+
+        // LONG HOLE
+        this.parts.bell_hole_bottom.matrix = new Matrix4(tm_bell);
+        let m_bell_hole_bottom = this.parts.bell_hole_bottom.matrix;
+        m_bell_hole_bottom.translate(0.145, -0.14, -0.09);
+        m_bell_hole_bottom.rotate(-45, 1, 0, 0);
+        m_bell_hole_bottom.scale(0.05, 0.15, 0.05);
+
         // HEAD TRANSFORMS
         this.parts.head.matrix = new Matrix4(tm_body); // head dependent on body translation matrix
         let m_head = this.parts.head.matrix;
         m_head.translate(0.02, 0.6, 0.02);
+        let tm_head = new Matrix4(m_head);
         m_head.scale(0.9, 0.7, 0.9);
+
+        // EARS!!
+        // LEFT
+        // OUTER
+        this.parts.ear_left.matrix = new Matrix4(tm_head);
+        let m_ear_left = this.parts.ear_left.matrix;
+        m_ear_left.translate(0.31, 0.34, 0.2);
+        m_ear_left.rotate(-20, 0, 0, 1);
+        m_ear_left.scale(0.33, 0.33, 0.3);
+        let tm_ear_left = new Matrix4(m_ear_left);
+
+        // INNER
+        this.parts.ear_left_inner.matrix = new Matrix4(tm_ear_left);
+        let m_ear_left_inner = this.parts.ear_left_inner.matrix;
+        m_ear_left_inner.translate(0.08, 0.06, -0.05);
+        m_ear_left_inner.scale(0.75, 0.75, 0.5);
+
+        // RIGHT
+        // OUTER
+        this.parts.ear_right.matrix = new Matrix4(tm_head);
+        let m_ear_right = this.parts.ear_right.matrix;
+        m_ear_right.translate(0.04, 0.27, 0.2);
+        m_ear_right.rotate(20, 0, 0, 1);
+        m_ear_right.scale(0.33, 0.33, 0.3);
+        let tm_ear_right = new Matrix4(m_ear_right);
+
+        // INNER
+        this.parts.ear_right_inner.matrix = new Matrix4(tm_ear_right);
+        let m_ear_right_inner = this.parts.ear_right_inner.matrix;
+        m_ear_right_inner.translate(0.08, 0.06, -0.05);
+        m_ear_right_inner.scale(0.75, 0.75, 0.5);
+
+        // EYES
+        // LEFT
+        this.parts.eye_left.matrix = new Matrix4(tm_head);
+        let m_eye_left = this.parts.eye_left.matrix;
+        m_eye_left.translate(0.05, 0.17, 0.06);
+        m_eye_left.rotate(45, 0, 1, 0);
+        m_eye_left.rotate(15, 1, 0, 0);
+        m_eye_left.scale(0.05, 0.05, 0.05);
+
+        // RIGHT
+        this.parts.eye_right.matrix = new Matrix4(tm_head);
+        let m_eye_right = this.parts.eye_right.matrix;
+        m_eye_right.translate(0.47, 0.17, 0.025);
+        m_eye_right.rotate(-45, 0, 1, 0);
+        m_eye_right.rotate(15, 1, 0, 0);
+        m_eye_right.scale(0.05, 0.05, 0.05);
+
+        // MOUTH
+        // LEFT
+        this.parts.mouth_left.matrix = new Matrix4(tm_head);
+        let m_mouth_left = this.parts.mouth_left.matrix;
+        m_mouth_left.translate(0.22, 0.15, -0.05);
+        m_mouth_left.rotate(-45, 0, 0, 1);
+        m_mouth_left.rotate(15, 1, 0, 0);
+        m_mouth_left.scale(0.02, 0.08, 0.05);
+
+        // RIGHT
+        this.parts.mouth_right.matrix = new Matrix4(tm_head);
+        let m_mouth_right = this.parts.mouth_right.matrix;
+        m_mouth_right.translate(0.32, 0.135, -0.05);
+        m_mouth_right.rotate(45, 0, 0, 1);
+        m_mouth_right.rotate(15, 1, 0, 0);
+        m_mouth_right.scale(0.02, 0.08, 0.05);
+
+        // NOSE !!
+        this.parts.nose.matrix = new Matrix4(tm_head);
+        let m_nose = this.parts.nose.matrix;
+        m_nose.translate(0.257, 0.2, -0.03);
+        m_nose.rotate(15, 1, 0, 0);
+        m_nose.scale(0.04, 0.02, 0.05);
+
+
+        // ARMS 
+        // LEFT ARM
+        this.parts.arm_left.matrix = new Matrix4(tm_body);
+        let m_arm_left = this.parts.arm_left.matrix;
+        m_arm_left.translate(0.6, 0.5, 0.2);
+        m_arm_left.rotate(-135, 0, 0, 1);
+        this.rotatePart(m_arm_left, 'arm_left');
+        let tm_arm_left = new Matrix4(m_arm_left);
+        m_arm_left.scale(0.3, 0.6, 0.3);
+
+        // LEFT HAND
+        this.parts.hand_left.matrix = new Matrix4(tm_arm_left);
+        let m_hand_left = this.parts.hand_left.matrix;
+        m_hand_left.translate(0.015, 0.25, 0.015);
+        let tm_hand_left = new Matrix4(m_hand_left);
+        m_hand_left.scale(0.25, 0.25, 0.25);
+
+        // RIGHT ARM
+        this.parts.arm_right.matrix = new Matrix4(tm_body);
+        let m_arm_right = this.parts.arm_right.matrix;
+        m_arm_right.translate(0.02, 0.5, 0.2);
+        m_arm_right.rotate(135, 0, 0, 1);
+        m_arm_right.rotate(-90, 0, 1, 0);
+        this.rotatePart(m_arm_right, 'arm_right');
+        let tm_arm_right = new Matrix4(m_arm_right);
+        m_arm_right.scale(0.3, 0.6, 0.3);
+
+        // RIGHT HAND
+        this.parts.hand_right.matrix = new Matrix4(tm_arm_right);
+        let m_hand_right = this.parts.hand_right.matrix;
+        m_hand_right.translate(0.015, 0.25, 0.015);
+        let tm_hand_right = new Matrix4(m_hand_right);
+        m_hand_right.scale(0.25, 0.25, 0.25);
+
 
         // LEG TRANSFORMS
         // LEFT LEG
         // LEFT LEG TOP
+        // this.parts.leg_left_top.matrix = new Matrix4(tm_body);
+        // let m_leg_left_top = this.parts.leg_left_top.matrix;
+        // m_leg_left_top.translate(0.46, 0.1, 0.3);
+        // this.rotatePart(m_leg_left_top, 'leg_left_top');
+        // let tm_leg_left_top = new Matrix4(m_leg_left_top);
+        // m_leg_left_top.scale(0.27, 0.2, 0.27);
+
+        // // LEFT LEG BOTTOM
+        // this.parts.leg_left_bottom.matrix = new Matrix4(tm_leg_left_top);
+        // let m_leg_left_bottom = this.parts.leg_left_bottom.matrix;
+        // m_leg_left_bottom.translate(0, -0.2, -0.135);
+        // this.rotatePart(m_leg_left_bottom, 'leg_left_bottom');
+        // let tm_leg_left_bottom = new Matrix4(m_leg_left_bottom);
+        // m_leg_left_bottom.scale(0.27, 0.12, 0.27);
+
+        // // LEFT FOOT
+        // this.parts.foot_left.matrix = new Matrix4(tm_leg_left_bottom);
+        // let m_foot_left = this.parts.foot_left.matrix;
+        // m_foot_left.translate(0, -0.08, 0.1);
+        // this.rotatePart(m_foot_left, 'foot_left');
+        // m_foot_left.scale(0.3, 0.15, 0.35);
+
+
         this.parts.leg_left_top.matrix = new Matrix4(tm_body);
         let m_leg_left_top = this.parts.leg_left_top.matrix;
-        m_leg_left_top.translate(0.46, 0.1, 0.3);
+        m_leg_left_top.translate(0.5, 0.1, 0.3);
+        m_leg_left_top.rotate(-90, 0, 1, 0);
+        m_leg_left_top.rotate(180, 1, 0, 0);
         this.rotatePart(m_leg_left_top, 'leg_left_top');
+        m_leg_left_top.scale(1.1, 1.1, 1.1);
         let tm_leg_left_top = new Matrix4(m_leg_left_top);
-        m_leg_left_top.scale(0.27, 0.2, 0.27);
+        m_leg_left_top.scale(0.33, 0.4, 0.33);
 
         // LEFT LEG BOTTOM
         this.parts.leg_left_bottom.matrix = new Matrix4(tm_leg_left_top);
         let m_leg_left_bottom = this.parts.leg_left_bottom.matrix;
-        m_leg_left_bottom.translate(0, -0.2, -0.135);
+        m_leg_left_bottom.translate(-0.01, 0.15, -0.005);
         this.rotatePart(m_leg_left_bottom, 'leg_left_bottom');
         let tm_leg_left_bottom = new Matrix4(m_leg_left_bottom);
-        m_leg_left_bottom.scale(0.27, 0.12, 0.27);
+        m_leg_left_bottom.scale(0.25, 0.3, 0.25);
 
         // LEFT FOOT
         this.parts.foot_left.matrix = new Matrix4(tm_leg_left_bottom);
         let m_foot_left = this.parts.foot_left.matrix;
-        m_foot_left.translate(0, -0.08, 0.1);
+        m_foot_left.translate(-0.05, 0.1, -0.017);
+        m_foot_left.rotate(90, 0, 1, 0);
+        m_foot_left.rotate(-180, 1, 0, 0);
         this.rotatePart(m_foot_left, 'foot_left');
         m_foot_left.scale(0.3, 0.15, 0.35);
 
@@ -92,23 +292,28 @@ class PuppyCat {
         // RIGHT LEG TOP
         this.parts.leg_right_top.matrix = new Matrix4(tm_body);
         let m_leg_right_top = this.parts.leg_right_top.matrix;
-        m_leg_right_top.translate(0.15, 0.1, 0.3);
+        m_leg_right_top.translate(0.135, 0.1, 0.3);
+        m_leg_right_top.rotate(-90, 0, 1, 0);
+        m_leg_right_top.rotate(180, 1, 0, 0);
         this.rotatePart(m_leg_right_top, 'leg_right_top');
+        m_leg_right_top.scale(1.1, 1.1, 1.1);
         let tm_leg_right_top = new Matrix4(m_leg_right_top);
-        m_leg_right_top.scale(0.27, 0.2, 0.27);
+        m_leg_right_top.scale(0.33, 0.4, 0.33);
 
         // RIGHT LEG BOTTOM
         this.parts.leg_right_bottom.matrix = new Matrix4(tm_leg_right_top);
         let m_leg_right_bottom = this.parts.leg_right_bottom.matrix;
-        m_leg_right_bottom.translate(0, -0.2, -0.135);
+        m_leg_right_bottom.translate(-0.01, 0.15, -0.005);
         this.rotatePart(m_leg_right_bottom, 'leg_right_bottom');
         let tm_leg_right_bottom = new Matrix4(m_leg_right_bottom);
-        m_leg_right_bottom.scale(0.27, 0.12, 0.27);
+        m_leg_right_bottom.scale(0.25, 0.3, 0.25);
 
         // RIGHT FOOT
         this.parts.foot_right.matrix = new Matrix4(tm_leg_right_bottom);
         let m_foot_right = this.parts.foot_right.matrix;
-        m_foot_right.translate(0, -0.08, 0.1);
+        m_foot_right.translate(-0.05, 0.1, -0.017);
+        m_foot_right.rotate(90, 0, 1, 0);
+        m_foot_right.rotate(-180, 1, 0, 0);
         this.rotatePart(m_foot_right, 'foot_right');
         m_foot_right.scale(0.3, 0.15, 0.35);
 

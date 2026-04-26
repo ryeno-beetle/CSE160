@@ -118,10 +118,10 @@ function addUIEvents() {
 
   // LEFT
   let left_leg_slider = document.getElementById("left_leg_slider");
-  left_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_top = [parseInt(left_leg_slider.value), 0, 0]; renderScene(); });
+  left_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_top = [0, 0, parseInt(left_leg_slider.value)]; renderScene(); });
   
   let left_knee_slider = document.getElementById("left_knee_slider");
-  left_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_bottom = [parseInt(left_knee_slider.value), 0, 0]; renderScene(); });
+  left_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_bottom = [0, 0, parseInt(left_knee_slider.value)]; renderScene(); });
 
   let left_ankle_slider = document.getElementById("left_ankle_slider");
   left_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_left = [parseInt(left_ankle_slider.value), 0, 0]; renderScene(); });

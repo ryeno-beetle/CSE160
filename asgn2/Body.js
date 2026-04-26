@@ -27,6 +27,20 @@ class Body {
         }
     }
 
+    // copied from cube... eek
+    setOrigin(point) {
+        let m = new Matrix4();
+        m.translate(-point[0], -point[1], -point[2]);
+        for (let i = 0; i < this.allVertices.length; i++) {
+            this.transformVertices(m, this.allVertices[i]);
+        }
+        let i = 0;
+        for (const [f, s] of Object.entries(this.shapes)) {
+            s.vertices = new Float32Array(this.allVertices[i]);
+            i++;
+        }
+    }
+
     convertRGB(arr) {
         arr = arr.map((e) => e/255.0);
         arr.push(1);
@@ -34,17 +48,7 @@ class Body {
     }
 
     makeShapes() {
-        let v_topbottom = [
-            // bottom circle
-            0, 0.2, 0,  0.2, 0, 0,  0.34, 0.34, 0,
-            0.2, 0, 0,  0.48, 0, 0,  0.34, 0.34, 0,
-            0.48, 0, 0,  0.68, 0.2, 0,  0.34, 0.34, 0,
-            0.68, 0.2, 0,  0.68, 0.48, 0,  0.34, 0.34, 0,
-            0.68, 0.48, 0,  0.48, 0.68, 0,  0.34, 0.34, 0,
-            0.48, 0.68, 0,  0.2, 0.68, 0,  0.34, 0.34, 0,
-            0.2, 0.68, 0,  0, 0.48, 0,  0.34, 0.34, 0,
-            0, 0.48, 0,  0, 0.2, 0,  0.34, 0.34, 0,
-
+        let v_top = [
             //top circle
             0.16, 0.26, 0.8,  0.26, 0.16, 0.8,  0.33, 0.33, 0.8,
             0.26, 0.16, 0.8,  0.4, 0.16, 0.8,  0.33, 0.33, 0.8,
@@ -54,6 +58,18 @@ class Body {
             0.4, 0.5, 0.8,  0.26, 0.5, 0.8,  0.33, 0.33, 0.8,
             0.26, 0.5, 0.8,  0.16, 0.4, 0.8,  0.33, 0.33, 0.8,
             0.16, 0.4, 0.8,  0.16, 0.26, 0.8,  0.33, 0.33, 0.8,
+        ];
+
+        let v_bottom = [
+            // bottom circle
+            0, 0.2, 0,  0.2, 0, 0,  0.34, 0.34, 0,
+            0.2, 0, 0,  0.48, 0, 0,  0.34, 0.34, 0,
+            0.48, 0, 0,  0.68, 0.2, 0,  0.34, 0.34, 0,
+            0.68, 0.2, 0,  0.68, 0.48, 0,  0.34, 0.34, 0,
+            0.68, 0.48, 0,  0.48, 0.68, 0,  0.34, 0.34, 0,
+            0.48, 0.68, 0,  0.2, 0.68, 0,  0.34, 0.34, 0,
+            0.2, 0.68, 0,  0, 0.48, 0,  0.34, 0.34, 0,
+            0, 0.48, 0,  0, 0.2, 0,  0.34, 0.34, 0,
         ];
 
         // VERTICAL STRIPS
@@ -151,14 +167,15 @@ class Body {
         m.rotate(-90, 1, 0, 0);
         m.rotate(-90, 0, 0, 1);
         m.scale(0.9, 0.9, 0.8);
-        let vertices = [v_topbottom, v_front_left, v_front, v_front_right, v_right, v_back_right, v_back, v_back_left, v_left];
-        for (let i = 0; i < vertices.length; i++) {
-            this.transformVertices(m, vertices[i]);
+        this.allVertices = [v_top, v_bottom, v_front_left, v_front, v_front_right, v_right, v_back_right, v_back, v_back_left, v_left];
+        for (let i = 0; i < this.allVertices.length; i++) {
+            this.transformVertices(m, this.allVertices[i]);
             //console.log(vertices[i]);
         }
 
         this.shapes = {
-            topbottom: new Shape(this.wgl, v_topbottom,     this.rgba.map((c) => {return c * 0.5})),
+            top: new Shape(this.wgl, v_top,                 this.rgba.map((c) => {return c * 0.9})),
+            bottom: new Shape(this.wgl, v_bottom,           this.rgba.map((c) => {return c * 0.5})),
             front_left: new Shape(this.wgl, v_front_left,   this.rgba.map((c) => {return c * 1})),
             front: new Shape(this.wgl, v_front,             this.rgba.map((c) => {return c * 0.95})),
             front_right: new Shape(this.wgl, v_front_right, this.rgba.map((c) => {return c * 0.9})),
