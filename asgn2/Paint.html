@@ -28,9 +28,17 @@
     <div id="ui">
       <div>
         <div>
-          <label>angle:</label>
+          <h3>rotation:</h3>
+          <label>x-axis: </label>
           <input type="range" min="-180" max="180" value="0" class="slider" id="angle_y_slider"/>
+          <label>y-axis: </label>
           <input type="range" min="-180" max="180" value="0" class="slider" id="angle_x_slider"/>
+        </div>
+        <div>
+          <h3>animation:</h3>
+          <button type="button" id="anim_toggle_button">ON/OFF</button>
+        </div>
+        <div>
           <h3>joint control</h3>
           <label>right leg:</label>
           <input type="range" min="-30" max="30" value="0" class="slider" id="right_leg_slider"/>
@@ -46,10 +54,6 @@
           <input type="range" min="-10" max="10" value="0" class="slider" id="right_ankle_slider"/>
           <label>left ankle:</label>
           <input type="range" min="-10" max="10" value="0" class="slider" id="left_ankle_slider"/>          
-          </div>
-        <div>
-          <label>animation:</label>
-          <button type="button" id="anim_toggle_button">ON/OFF</button>
         </div>
       </div>
     </div>

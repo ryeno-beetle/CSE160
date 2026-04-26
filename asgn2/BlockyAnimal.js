@@ -77,7 +77,6 @@ function main() {
     if (mouseDown) {
       g_globalAngle_y = initialAngle_y + (initial_x - ev.clientX);
       g_globalAngle_x = initialAngle_x + (initial_y - ev.clientY);
-      console.log(g_globalAngle_x);
       renderScene();
     }
   }
