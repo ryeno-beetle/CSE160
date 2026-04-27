@@ -1,7 +1,6 @@
-//TODO!!!!!
-// make sliders update with angles while animation plays so that things don't snap
+// todo (stretch goals)
 /*
-[] make shading more purpleish instead of just blackish
+[] make sliders update with angles while animation plays so that things don't snap
 [] make him blink occasionally.. 
 [] rotate right ear bc it's darker oops
 [] it would be really cute to have little confetti on click ..
