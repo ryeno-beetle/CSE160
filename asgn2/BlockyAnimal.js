@@ -1,12 +1,15 @@
 //TODO!!!!!
 // make sliders update with angles while animation plays so that things don't snap
 /*
-[] There is a complete animal, with at least 8 parts. Color on most of the body in a way that looks nice.
-[] At least one joint angle is controllable with sliders. Joint rotates around a point, no shearing or other weirdness.
 [] Slider control of all joints in the animal
-[] Animation on most of the animal, and it moves in a natural way
 [] Poke with shift-click for a different animation
 [] Performance optimization and indicator.
+ 
+[] tail and eyebrows!!!
+[] make shading more purpleish instead of just blackish
+[] make him blink occasionally.. 
+[] rotate right ear bc it's darker oops
+[] it would be really cute to have little confetti on click ..
 */
 // ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
@@ -108,13 +111,13 @@ function addUIEvents() {
   // LEGS
   // RIGHT
   let right_leg_slider = document.getElementById("right_leg_slider");
-  right_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_top = [parseInt(right_leg_slider.value), 0, 0]; renderScene(); });
+  right_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_top = [0, 0, parseInt(right_leg_slider.value)]; renderScene(); });
   
   let right_knee_slider = document.getElementById("right_knee_slider");
-  right_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_bottom = [parseInt(right_knee_slider.value), 0, 0]; renderScene(); });
+  right_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_bottom = [0, 0, parseInt(right_knee_slider.value)]; renderScene(); });
 
   let right_ankle_slider = document.getElementById("right_ankle_slider");
-  right_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_right = [parseInt(right_ankle_slider.value), 0, 0]; renderScene(); });
+  right_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_right = [0, 0, parseInt(right_ankle_slider.value)]; renderScene(); });
 
   // LEFT
   let left_leg_slider = document.getElementById("left_leg_slider");

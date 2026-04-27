@@ -3,6 +3,8 @@ class PuppyCat {
         this.wgl = wgl;
         this.angles = {
             body: [0, 0, 0],
+            head: [0, 0, 0],
+            bell: [0, 0, 0],
             arm_left: [0, 0, 0],
             arm_right: [0, 0, 0],
             leg_left_top: [0, 0, 0],
@@ -12,15 +14,21 @@ class PuppyCat {
             leg_right_bottom: [0, 0, 0],
             foot_right: [0, 0, 0],
         }
+        this.translates = {
+            body: [0, 0, 0],
+            bell: [0, 0, 0],
+        }
         this.makeParts();
         this.anims = {};
         this.makeWalkAnim();
         this.animating = false;
+        this.currentAnim = 'walkAnim';
     }
 
     makeParts() {
         let white = [255, 232, 232, 1];
         let brown = [138, 66, 82, 1];
+        let dark_brown = [71, 34, 48, 1];
         let pink = [255, 150, 187, 1];
         let yellow = [255, 188, 94];
         this.parts = {
@@ -36,8 +44,10 @@ class PuppyCat {
             ear_right: new Body(this.wgl, brown),
             ear_right_inner: new Body(this.wgl, pink),
             // face
-            eye_left: new Cube(this.wgl, brown),
-            eye_right: new Cube(this.wgl, brown),
+            eye_left: new Cube(this.wgl, dark_brown),
+            eye_right: new Cube(this.wgl, dark_brown),
+            eyebrow_left: new Cube(this.wgl, brown),
+            eyebrow_right: new Cube(this.wgl, brown),
             mouth_right: new Cube(this.wgl, brown),
             mouth_left: new Cube(this.wgl, brown),
             nose: new Cube(this.wgl, brown),
@@ -55,18 +65,22 @@ class PuppyCat {
             leg_right_top: new Body(this.wgl, white),
             leg_right_bottom: new Body(this.wgl, white),
             foot_right: new Body(this.wgl, brown),
+
+            // FLOOR??
+            floor: new Cube(this.wgl, [166, 146, 214, 1])
         }
-        // this.parts.leg_left_top.setOrigin([0.5, 1, 0.5]);
-        // this.parts.leg_left_bottom.setOrigin([0.5, 1, 0]);
-        // this.parts.foot_left.setOrigin([0.5, 1, 0.5]);
+
+        this.parts.body.setOrigin([0.34 * 0.9, 0, 0.34 * 0.9]);
+        this.parts.head.setOrigin([0.34 * 0.9, 0, 0.34 * 0.9]);
+
+        this.parts.arm_left.setOrigin([0.34, 0, 0.34]);
+        this.parts.arm_right.setOrigin([0.34, 0, 0.34]);
+        this.parts.hand_left.setOrigin([0.34, 0, 0.34]);
+        this.parts.hand_right.setOrigin([0.34, 0, 0.34]);
 
         this.parts.leg_left_top.setOrigin([0.34, 0, 0.34]);
         this.parts.leg_left_bottom.setOrigin([0.34, 0, 0.34]);
         this.parts.foot_left.setOrigin([0.34, 0.8, 0.34]);
-
-        // this.parts.leg_right_top.setOrigin([0.5, 1, 0.5]);
-        // this.parts.leg_right_bottom.setOrigin([0.5, 1, 0]);
-        // this.parts.foot_right.setOrigin([0.5, 1, 0.5]);
 
         this.parts.leg_right_top.setOrigin([0.34, 0, 0.34]);
         this.parts.leg_right_bottom.setOrigin([0.34, 0, 0.34]);
@@ -77,18 +91,26 @@ class PuppyCat {
 
     transformParts() {
         //remember: Translate then Rotate then Save then Scale
+        // floor
+        this.parts.floor.matrix = new Matrix4();
+        let m_floor = this.parts.floor.matrix;
+        m_floor.translate(-0.5, -1.605, -0.6);
 
         // BODY TRANSFORMS
         // reset and save ref to matrix
         this.parts.body.resetMatrix();
         let m_body = this.parts.body.matrix;
+        // translate to be at origin
+        m_body.translate(0, -0.34 * 0.9, 0);
+        // apply current translation
+        this.translatePart(m_body, 'body');
         // apply current rotation
         this.rotatePart(m_body, 'body');
-        // translate to be centered around origin!!
-        m_body.translate(-0.34 * 0.9, -0.34 * 0.9, -0.4 * 0.9);
         // save copy of matrix
         let tm_body = new Matrix4(m_body); // translation matrix for body
-        //m_body.scale(0.9, 0.9, 0.9);
+        // translate everything else to match the body placement
+        // since we changed the body's origin
+        tm_body.translate(-0.34 * 0.9, 0, -0.34 * 0.9);
 
         // COLLAR 
         this.parts.collar.matrix = new Matrix4(tm_body);
@@ -101,6 +123,8 @@ class PuppyCat {
         this.parts.bell.matrix = new Matrix4(tm_body);
         let m_bell = this.parts.bell.matrix;
         m_bell.translate(0.13, 0.45, 0.02);
+        this.translatePart(m_bell, 'bell');
+        this.rotatePart(m_bell, 'bell');
         let tm_bell = new Matrix4(m_bell);
         m_bell.rotate(-80, 1, 0, 0);
         m_bell.rotate(45, 0, 1, 0);
@@ -120,12 +144,16 @@ class PuppyCat {
         m_bell_hole_bottom.rotate(-45, 1, 0, 0);
         m_bell_hole_bottom.scale(0.05, 0.15, 0.05);
 
+
         // HEAD TRANSFORMS
         this.parts.head.matrix = new Matrix4(tm_body); // head dependent on body translation matrix
         let m_head = this.parts.head.matrix;
-        m_head.translate(0.02, 0.6, 0.02);
+        m_head.translate(0.34*0.9, 0.6, 0.34*0.9);
+        this.rotatePart(m_head, 'head');
         let tm_head = new Matrix4(m_head);
         m_head.scale(0.9, 0.7, 0.9);
+        tm_head.translate(-0.34 * 0.9*0.9, 0, -0.34 * 0.9*0.9);
+        //this.rotatePart(tm_head, 'head');
 
         // EARS!!
         // LEFT
@@ -175,6 +203,25 @@ class PuppyCat {
         m_eye_right.rotate(15, 1, 0, 0);
         m_eye_right.scale(0.05, 0.05, 0.05);
 
+        // EYEBROWS
+        // LEFT
+        this.parts.eyebrow_left.matrix = new Matrix4(tm_head);
+        let m_eyebrow_left = this.parts.eyebrow_left.matrix;
+        m_eyebrow_left.translate(0.06, 0.27, 0.09);
+        m_eyebrow_left.rotate(45, 0, 1, 0);
+        m_eyebrow_left.rotate(15, 1, 0, 0);
+        m_eyebrow_left.rotate(-20, 0, 0, 1);
+        m_eyebrow_left.scale(0.09, 0.05, 0.05);
+
+        // RIGHT
+        this.parts.eyebrow_right.matrix = new Matrix4(tm_head);
+        let m_eyebrow_right = this.parts.eyebrow_right.matrix;
+        m_eyebrow_right.translate(0.43, 0.24, 0.025);
+        m_eyebrow_right.rotate(-45, 0, 1, 0);
+        m_eyebrow_right.rotate(15, 1, 0, 0);
+        m_eyebrow_right.rotate(20, 0, 0, 1);
+        m_eyebrow_right.scale(0.09, 0.05, 0.05);
+
         // MOUTH
         // LEFT
         this.parts.mouth_left.matrix = new Matrix4(tm_head);
@@ -204,7 +251,7 @@ class PuppyCat {
         // LEFT ARM
         this.parts.arm_left.matrix = new Matrix4(tm_body);
         let m_arm_left = this.parts.arm_left.matrix;
-        m_arm_left.translate(0.6, 0.5, 0.2);
+        m_arm_left.translate(0.5, 0.45, 0.3);
         m_arm_left.rotate(-135, 0, 0, 1);
         this.rotatePart(m_arm_left, 'arm_left');
         let tm_arm_left = new Matrix4(m_arm_left);
@@ -213,14 +260,14 @@ class PuppyCat {
         // LEFT HAND
         this.parts.hand_left.matrix = new Matrix4(tm_arm_left);
         let m_hand_left = this.parts.hand_left.matrix;
-        m_hand_left.translate(0.015, 0.25, 0.015);
+        m_hand_left.translate(0, 0.25, 0);
         let tm_hand_left = new Matrix4(m_hand_left);
         m_hand_left.scale(0.25, 0.25, 0.25);
 
         // RIGHT ARM
         this.parts.arm_right.matrix = new Matrix4(tm_body);
         let m_arm_right = this.parts.arm_right.matrix;
-        m_arm_right.translate(0.02, 0.5, 0.2);
+        m_arm_right.translate(0.12, 0.45, 0.3);
         m_arm_right.rotate(135, 0, 0, 1);
         m_arm_right.rotate(-90, 0, 1, 0);
         this.rotatePart(m_arm_right, 'arm_right');
@@ -230,7 +277,7 @@ class PuppyCat {
         // RIGHT HAND
         this.parts.hand_right.matrix = new Matrix4(tm_arm_right);
         let m_hand_right = this.parts.hand_right.matrix;
-        m_hand_right.translate(0.015, 0.25, 0.015);
+        m_hand_right.translate(0, 0.25, 0);
         let tm_hand_right = new Matrix4(m_hand_right);
         m_hand_right.scale(0.25, 0.25, 0.25);
 
@@ -238,29 +285,6 @@ class PuppyCat {
         // LEG TRANSFORMS
         // LEFT LEG
         // LEFT LEG TOP
-        // this.parts.leg_left_top.matrix = new Matrix4(tm_body);
-        // let m_leg_left_top = this.parts.leg_left_top.matrix;
-        // m_leg_left_top.translate(0.46, 0.1, 0.3);
-        // this.rotatePart(m_leg_left_top, 'leg_left_top');
-        // let tm_leg_left_top = new Matrix4(m_leg_left_top);
-        // m_leg_left_top.scale(0.27, 0.2, 0.27);
-
-        // // LEFT LEG BOTTOM
-        // this.parts.leg_left_bottom.matrix = new Matrix4(tm_leg_left_top);
-        // let m_leg_left_bottom = this.parts.leg_left_bottom.matrix;
-        // m_leg_left_bottom.translate(0, -0.2, -0.135);
-        // this.rotatePart(m_leg_left_bottom, 'leg_left_bottom');
-        // let tm_leg_left_bottom = new Matrix4(m_leg_left_bottom);
-        // m_leg_left_bottom.scale(0.27, 0.12, 0.27);
-
-        // // LEFT FOOT
-        // this.parts.foot_left.matrix = new Matrix4(tm_leg_left_bottom);
-        // let m_foot_left = this.parts.foot_left.matrix;
-        // m_foot_left.translate(0, -0.08, 0.1);
-        // this.rotatePart(m_foot_left, 'foot_left');
-        // m_foot_left.scale(0.3, 0.15, 0.35);
-
-
         this.parts.leg_left_top.matrix = new Matrix4(tm_body);
         let m_leg_left_top = this.parts.leg_left_top.matrix;
         m_leg_left_top.translate(0.5, 0.1, 0.3);
@@ -336,94 +360,125 @@ class PuppyCat {
         }
     }
 
+    // apply translate for a part based on this.translates
+    translatePart(mat, part) {
+        let trans = this.translates[part];
+        mat.translate(...trans);
+    }
+
     makeWalkAnim() {
         this.anims.walkAnim = {
             duration: 1000, // in ms
             keyframes: [0, 0.25, 0.5, 0.75, 1], // fractions of dur where an angle will be keyed
-            values: {
+            angleValues: {
+                body: [
+                    [0, 0, 0],
+                    [0, -5, -3],
+                    [0, 0, 0],
+                    [0, 5, 3],
+                    [0, 0, 0],
+                ],
+                head: [
+                    [0, 0, 0],
+                    [-3, 0, 0],
+                    [0, 0, 0],
+                    [-3, 0, 0],
+                    [0, 0, 0],
+                ],
+                bell: [
+                    [0, 0, 0],
+                    [-5, 0, 0],
+                    [0, 0, 0],
+                    [-5, 0, 0],
+                    [0, 0, 0],
+                ],
                 leg_left_top: [
                     [0, 0, 0],
-                    [-20, 0, 0],
+                    [5, 0, -30], // 5 in x pos for waddle??
                     [0, 0, 0],
-                    [20, 0, 0],
+                    [0, 0, 20],
                     [0, 0, 0],
                 ],
                 leg_left_bottom: [
                     [0, 0, 0],
                     [0, 0, 0],
-                    [-20, 0, 0],
+                    [0, 0, -45],
                     [0, 0, 0],
                     [0, 0, 0],
                 ],
                 foot_left: [
                     [0, 0, 0],
-                    [0, 0, 0],
-                    [0, 0, 0],
+                    [-20, 0, 0],
+                    [20, 0, 0],
                     [0, 0, 0],
                     [0, 0, 0],
                 ],
                 leg_right_top: [
                     [0, 0, 0],
-                    [20, 0, 0],
+                    [0, 0, 20],
                     [0, 0, 0],
-                    [-20, 0, 0],
+                    [-5, 0, -30],
                     [0, 0, 0],
                 ],
                 leg_right_bottom: [
-                    [-20, 0, 0],
+                    [0, 0, -45],
                     [0, 0, 0],
                     [0, 0, 0],
                     [0, 0, 0],
-                    [0, 0, 0],
+                    [0, 0, -45],
                 ],
                 foot_right: [
+                    [20, 0, 0],
                     [0, 0, 0],
                     [0, 0, 0],
-                    [0, 0, 0],
-                    [0, 0, 0],
-                    [0, 0, 0],
+                    [-20, 0, 0],
+                    [20, 0, 0],
+                ],
+                arm_left: [
+                    [0, 0, 5],
+                    [-20, 0, 0],
+                    [0, 0, 5],
+                    [20, 0, 0],
+                    [0, 0, 5],
+                ],
+                arm_right: [
+                    [-5, 0, 0],
+                    [0, 0, -20],
+                    [-5, 0, 0],
+                    [0, 0, 20],
+                    [-5, 0, 0],
+                ]
+            },
+            translateValues: {
+                body: [
+                    [0, 0.0, 0],
+                    [0, 0.01, 0],
+                    [0, 0.0, 0],
+                    [0, 0.01, 0],
+                    [0, 0.0, 0],
+                ],
+                bell: [
+                    [0, 0.0, 0],
+                    [0, -0.01, 0],
+                    [0, 0.0, 0],
+                    [0, -0.01, 0],
+                    [0, 0.0, 0],
                 ]
             }
         }
-        // this.anims.walkAnim = {
-        //     duration: 2000, // in ms
-        //     keyframes: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1], // fractions of dur where an angle will be keyed
-        //     values: {
-        //         leg_left_top: [
-        //             [10, 0, 0],
-        //             [15, 0, 0],
-        //             [0, 0, 0],
-        //             [-5, 0, 0],
-        //             [-10, 0, 0],
-        //             [-15, 0, 0],
-        //             [0, 0, 0],
-        //             [10, 0, 0],
-        //             [10, 0, 0],
-        //         ],
-        //         leg_left_bottom: [
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [-20, 0, 0],
-        //             [-30, 0, 0],
-        //             [-20, 0, 0],
-        //             [0, 0, 0],
-        //         ],
-        //         foot_left: [
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [0, 0, 0],
-        //             [10, 0, 0],
-        //             [5, 0, 0],
-        //             [10, 0, 0],
-        //             [5, 0, 0],
-        //             [0, 0, 0],
-        //         ]
-        //     }
-        // }
+    }
+
+    makeTripAnim() {
+        this.anims.tripAnim = {
+            duration: 4000,
+            keyframes: [],
+            angleValues: {
+
+            },
+            translateValues: {
+
+            }
+        }
     }
 
     // lerp two arrays
@@ -460,11 +515,21 @@ class PuppyCat {
         // get values we are lerping between,
         // lerp them,
         // and set the part's rotation
-        for (const [part, values] of Object.entries(anim.values)) {
+        for (const [part, values] of Object.entries(anim.angleValues)) {
             let v1 = values[keyIndex1];
             let v2 = values[keyIndex2];
             let v = this.lerp(v2, v1, ratio);
             this.angles[part] = v;
+            // console.log("%: ", fracProgressed);
+            // console.log(Math.round(v[0]));
+        }
+
+        // do the same for translation
+        for (const [part, values] of Object.entries(anim.translateValues)) {
+            let v1 = values[keyIndex1];
+            let v2 = values[keyIndex2];
+            let v = this.lerp(v2, v1, ratio);
+            this.translates[part] = v;
             // console.log("%: ", fracProgressed);
             // console.log(Math.round(v[0]));
         }
