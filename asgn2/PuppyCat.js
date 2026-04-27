@@ -5,6 +5,8 @@ class PuppyCat {
             body: [0, 0, 0],
             head: [0, 0, 0],
             bell: [0, 0, 0],
+            tail_base: [0, 0, 0],
+            tail_end: [0, 0, 0],
             arm_left: [0, 0, 0],
             arm_right: [0, 0, 0],
             leg_left_top: [0, 0, 0],
@@ -21,7 +23,9 @@ class PuppyCat {
         this.makeParts();
         this.anims = {};
         this.makeWalkAnim();
+        this.makeTripAnim();
         this.animating = false;
+        this.prevAnim = '';
         this.currentAnim = 'walkAnim';
     }
 
@@ -37,6 +41,8 @@ class PuppyCat {
             bell: new Body(this.wgl, yellow),
             bell_hole_top: new Cube(this.wgl, brown),
             bell_hole_bottom: new Cube(this.wgl, brown),
+            tail_base: new Cube(this.wgl, white),
+            tail_end: new Cube(this.wgl, brown),
             // HEAD
             head: new Body(this.wgl, white),
             ear_left: new Body(this.wgl, brown),
@@ -85,6 +91,9 @@ class PuppyCat {
         this.parts.leg_right_top.setOrigin([0.34, 0, 0.34]);
         this.parts.leg_right_bottom.setOrigin([0.34, 0, 0.34]);
         this.parts.foot_right.setOrigin([0.34, 0.8, 0.34]);
+
+        this.parts.tail_base.setOrigin([0.5, 0.5, 0]);
+        this.parts.tail_end.setOrigin([0.5, 0, 0]);
 
         this.transformParts();
     }
@@ -143,6 +152,24 @@ class PuppyCat {
         m_bell_hole_bottom.translate(0.145, -0.14, -0.09);
         m_bell_hole_bottom.rotate(-45, 1, 0, 0);
         m_bell_hole_bottom.scale(0.05, 0.15, 0.05);
+
+        // TAIL
+        // TAIL BASE
+        this.parts.tail_base.matrix = new Matrix4(tm_body);
+        let m_tail_base = this.parts.tail_base.matrix;
+        m_tail_base.translate(0.3, 0.1, 0.63);
+        m_tail_base.rotate(20, 1, 0, 0);
+        this.rotatePart(m_tail_base, 'tail_base');
+        let tm_tail_base = new Matrix4(m_tail_base);
+        m_tail_base.scale(0.05, 0.05, 0.15);
+
+        // TAIL BASE
+        this.parts.tail_end.matrix = new Matrix4(tm_tail_base);
+        let m_tail_end = this.parts.tail_end.matrix;
+        m_tail_end.translate(0, -0.03, 0.16);
+        m_tail_end.rotate(-90, 1, 0, 0);
+        this.rotatePart(m_tail_end, 'tail_end');
+        m_tail_end.scale(0.051, 0.051, 0.12);
 
 
         // HEAD TRANSFORMS
@@ -369,6 +396,7 @@ class PuppyCat {
     makeWalkAnim() {
         this.anims.walkAnim = {
             duration: 1000, // in ms
+            loop: true,
             keyframes: [0, 0.25, 0.5, 0.75, 1], // fractions of dur where an angle will be keyed
             angleValues: {
                 body: [
@@ -392,9 +420,23 @@ class PuppyCat {
                     [-5, 0, 0],
                     [0, 0, 0],
                 ],
+                tail_base: [
+                    [5, 0, 0],
+                    [0, 0, 0],
+                    [5, 0, 0],
+                    [0, 0, 0],
+                    [5, 0, 0],
+                ],
+                tail_end: [
+                    [10, 0, 0],
+                    [0, 0, 0],
+                    [10, 0, 0],
+                    [0, 0, 0],
+                    [10, 0, 0],
+                ],
                 leg_left_top: [
                     [0, 0, 0],
-                    [5, 0, -30], // 5 in x pos for waddle??
+                    [5, 0, -30],
                     [0, 0, 0],
                     [0, 0, 20],
                     [0, 0, 0],
@@ -470,13 +512,134 @@ class PuppyCat {
 
     makeTripAnim() {
         this.anims.tripAnim = {
-            duration: 4000,
-            keyframes: [],
+            duration: 2000,
+            loop: false,
+            keyframes: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.85, 1],
             angleValues: {
-
+                body: [
+                    [0, 0, 0],
+                    [20, 0, 0], // high point
+                    [45, 0, 0], // hits floor
+                    [33.75, 0, 0], // bounce (in air)
+                    [22.5, 0, 0], // land + sit up
+                    [11.25, 0, 0], // sit up
+                    [10, 0, 0], // sit still
+                    [-10, 0, 0], // lean forward
+                    [-20, 0, 0], // stand up
+                    [0, 0, 0],
+                ],
+                head: [
+                    [0, 0, 0],
+                    [-20, 0, 0], // high point -> forward (lag)
+                    [-20, 0, 0], // hits floor -> forward (lag)
+                    [-10, 0, 0], // bounce (in air) -> forward less
+                    [0, 0, 0], // land + sit up -> normal
+                    [0, 0, 0], // sit up -> normal
+                    [-10, 0, 0], // sit still -> up
+                    [-20, 0, 0], // lean forward -> forward
+                    [-20, 0, 0], // stand up -> forward
+                    [0, 0, 0], // stood up -> normal
+                ],
+                tail_base: [
+                    [0, 0, 0],
+                    [-10, 0, 0], // high point -> up a bit
+                    [-30, 0, 0], // hits floor -> up
+                    [-20, 0, 0], // bounce (in air) -> down a bit
+                    [-30, 0, 0], // land + sit up -> up a bit
+                    [-15, 0, 0], // sit up -> down
+                    [0, 0, 0], // sit still -> down
+                    [0, 0, 0], // lean forward -> normal
+                    [20, 0, 0], // stand up -> down
+                    [0, 0, 0], // stood up -> normal
+                ],
+                // ARMS
+                arm_left: [
+                    [0, 0, 0],
+                    [-35, 0, 0], // high pt -> starting to bend (lag)
+                    [-70, 0, 0], // hits floor -> arms bent (lag)
+                    [-35, 0, 0], // bounce (in air) -> arms less bent (lag)
+                    [0, 0, 0], // land + sit up -> arms no longer bent
+                    [0, 0, 0], // sit up -> no bend
+                    [0, 0, 0], // sit still -> no bend
+                    [-22.5, 0, 0], // lean forward -> bend more
+                    [-45, 0, 0], // stand up -> bend more
+                    [0, 0, 0], // stood up -> un bend
+                ],
+                arm_right: [
+                    [0, 0, 0], // COPIED FROM LEFT ARM (and changed to proper axis/direction)
+                    [0, 0, 35], // high pt -> starting to bend (lag)
+                    [0, 0, 70], // hits floor -> arms bent (lag)
+                    [0, 0, 35], // bounce (in air) -> arms less bent (lag)
+                    [0, 0, 0], // land + sit up -> arms no longer bent
+                    [0, 0, 0], // sit up -> no bend
+                    [0, 0, 0], // sit still -> no bend
+                    [0, 0, 22.5], // lean forward -> bend more
+                    [0, 0, 45], // stand up -> bend more
+                    [0, 0, 0], // stood up -> un bend
+                ],
+                // LEGS
+                leg_left_top: [
+                    [0, 0, 0],
+                    [0, 0, 22.5], // high pt -> starting to bend (lag)
+                    [0, 0, 45], // hits floor -> legs bent (lag)
+                    [0, 0, 22.5], // bounce (in air) -> legs less bent (lag)
+                    [0, 0, 45], // land + sit up -> legs bent(lag)
+                    [0, 0, 70], // sit up -> bend more
+                    [0, 0, 70], // sit still -> still legs
+                    [0, 0, 135], // lean forward -> bend more (lower legs bending now)
+                    [0, 0, 45], // stand up -> partly bent
+                    [0, 0, 0],
+                ],
+                leg_right_top: [
+                    [0, 0, 0], // COPIED FROM LEFT LEG
+                    [0, 0, 22.5], // high pt -> starting to bend (lag)
+                    [0, 0, 45], // hits floor -> legs bent (lag)
+                    [0, 0, 22.5], // bounce (in air) -> legs less bent (lag)
+                    [0, 0, 45], // land + sit up -> legs bent(lag)
+                    [0, 0, 70], // sit up -> bend more
+                    [0, 0, 70], // sit still -> still legs
+                    [0, 0, 135], // lean forward -> bend more (lower legs bending now)
+                    [0, 0, 45], // stand up -> partly bent
+                    [0, 0, 0],
+                ],
+                leg_left_bottom: [
+                    [0, 0, 0],
+                    [0, 0, 0], // high pt -> locked
+                    [0, 0, 0], // hits floor -> locked
+                    [0, 0, -22.5], // bounce (in air) -> bend a bit (lag)
+                    [0, 0, 0], // land + sit up -> locked
+                    [0, 0, 0], // sit up -> locked
+                    [0, 0, 0], // sit still -> locked
+                    [0, 0, -90], // lean forward -> locked
+                    [0, 0, -45], // stand up -> partly bent
+                    [0, 0, 0],
+                ],
+                leg_right_bottom: [
+                    [0, 0, 0], // COPIED FROM LEFT LEG
+                    [0, 0, 0], // high pt -> locked
+                    [0, 0, 0], // hits floor -> locked
+                    [0, 0, -22.5], // bounce (in air) -> bend a bit (lag)
+                    [0, 0, 0], // land + sit up -> locked
+                    [0, 0, 0], // sit up -> locked
+                    [0, 0, 0], // sit still -> locked
+                    [0, 0, -90], // lean forward -> locked
+                    [0, 0, -45], // stand up -> partly bent
+                    [0, 0, 0],
+                ]
             },
             translateValues: {
-
+                body: [
+                    [0, 0, 0],
+                    [0, 0.1, 0], // high point
+                    [0, -0.1, 0], // on floor
+                    [0, -0.03, 0], // bounce??
+                    [0, -0.2, 0], // land + sitting up
+                    [0, -0.3, 0],
+                    [0, -0.3, 0], // sat up
+                    [0, -0.3, 0],
+                    [0, -0.03, 0],
+                    [0, 0, 0],
+                ]
             }
         }
     }
@@ -493,6 +656,16 @@ class PuppyCat {
     animate(animKey, timeStart, timeCurrent) {
         let anim = this.anims[animKey];
         let fracProgressed = ((timeCurrent - timeStart) % anim.duration) / anim.duration;
+        // if anim doesn't loop, 
+        // check if it's over and play prev anim (if there is one)
+        if (!anim.loop && timeCurrent - timeStart > anim.duration) {
+            if (this.prevAnim === '') {
+                this.stopAnim();
+            } else {
+                this.playAnim(this.prevAnim);
+            }
+        }
+        
         // ratio of key1 and key2 values to lerp
         let ratio = 1;
         // the keyframes we are in between
@@ -520,8 +693,6 @@ class PuppyCat {
             let v2 = values[keyIndex2];
             let v = this.lerp(v2, v1, ratio);
             this.angles[part] = v;
-            // console.log("%: ", fracProgressed);
-            // console.log(Math.round(v[0]));
         }
 
         // do the same for translation
@@ -530,14 +701,29 @@ class PuppyCat {
             let v2 = values[keyIndex2];
             let v = this.lerp(v2, v1, ratio);
             this.translates[part] = v;
-            // console.log("%: ", fracProgressed);
-            // console.log(Math.round(v[0]));
         }
+    }
+
+    playAnim(animKey) {
+        if (this.animating && !this.anims[animKey].loop) {
+            this.prevAnim = this.currentAnim;
+        } else {
+            this.prevAnim = '';
+        }
+        this.currentAnim = animKey;
+        this.animating = true;
+        this.animLoops = 0;
+    }
+    stopAnim() {
+        this.animating = false;
+        this.currentAnim = '';
+        this.prevAnim = '';
+        this.animLoops = 0;
     }
 
     render(timeStart, timeCurrent) {
         if (this.animating) {
-            this.animate('walkAnim', timeStart, timeCurrent);
+            this.animate(this.currentAnim, timeStart, timeCurrent);
         }
         // update shape positions
         this.transformParts();

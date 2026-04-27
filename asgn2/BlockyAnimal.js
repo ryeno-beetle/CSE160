@@ -1,15 +1,11 @@
 //TODO!!!!!
 // make sliders update with angles while animation plays so that things don't snap
 /*
-[] Slider control of all joints in the animal
-[] Poke with shift-click for a different animation
-[] Performance optimization and indicator.
- 
-[] tail and eyebrows!!!
 [] make shading more purpleish instead of just blackish
 [] make him blink occasionally.. 
 [] rotate right ear bc it's darker oops
 [] it would be really cute to have little confetti on click ..
+[] rotation sliders on click instead of on move
 */
 // ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
@@ -49,7 +45,7 @@ let puppycat;
 
 // TIME
 var g_startTime = performance.now();
-var g_seconds = performance.now() - g_startTime;
+var g_currentTime = performance.now();
 
 // mouse pos
 let mouseDown = false;
@@ -69,11 +65,20 @@ function main() {
   // EVENT HANDLERS
   // click function to be called on a mouse down event
   canvas.onmousedown = (ev) => {
-    mouseDown = true
-    initial_x = ev.clientX;
-    initial_y = ev.clientY;
-    initialAngle_y = g_globalAngle_y;
-    initialAngle_x = g_globalAngle_x;
+    if (ev.shiftKey) {
+      if (puppycat.currentAnim != 'tripAnim') {
+        puppycat.playAnim('tripAnim');
+        g_startTime = performance.now();
+        g_currentTime = performance.now();
+        requestAnimationFrame(tick);
+      }
+    } else {
+      mouseDown = true
+      initial_x = ev.clientX;
+      initial_y = ev.clientY;
+      initialAngle_y = g_globalAngle_y;
+      initialAngle_x = g_globalAngle_x;
+    }
   };
   canvas.onmouseup = (ev) => {mouseDown = false;}
   canvas.onmousemove = (ev) => {
@@ -96,17 +101,38 @@ function main() {
   puppycat = new PuppyCat(wgl);
 
   // render
-  renderScene();
+  requestAnimationFrame(tick);
 }
 
 function addUIEvents() {
-  // ANGLE SLIDER
-  // TODO: add mouseup mousedown events so it's not always calling
+  // ANGLE SLIDERS
   let angle_y_slider = document.getElementById("angle_y_slider");
   angle_y_slider.addEventListener('mousemove', () => { g_globalAngle_y = parseInt(angle_y_slider.value); renderScene(); });
 
   let angle_x_slider = document.getElementById("angle_x_slider");
   angle_x_slider.addEventListener('mousemove', () => { g_globalAngle_x = parseInt(angle_x_slider.value); renderScene(); });
+
+  // HEAD
+  let head_slider = document.getElementById("head_slider");
+  head_slider.addEventListener('mousemove', () => { puppycat.angles.head = [parseInt(head_slider.value), 0, 0]; renderScene(); });
+
+  // BELL
+  let bell_slider = document.getElementById("bell_slider");
+  bell_slider.addEventListener('mousemove', () => { puppycat.angles.bell = [parseInt(bell_slider.value), 0, 0]; renderScene(); });
+
+  // TAIL
+  let tail_base_slider = document.getElementById("tail_base_slider");
+  tail_base_slider.addEventListener('mousemove', () => { puppycat.angles.tail_base = [parseInt(tail_base_slider.value), 0, 0]; renderScene(); });
+  let tail_end_slider = document.getElementById("tail_end_slider");
+  tail_end_slider.addEventListener('mousemove', () => { puppycat.angles.tail_end = [parseInt(tail_end_slider.value), 0, 0]; renderScene(); });
+
+  // ARMS
+  // RIGHT ARM
+  let right_arm_slider = document.getElementById("right_arm_slider");
+  right_arm_slider.addEventListener('mousemove', () => { puppycat.angles.arm_right = [0, 0, parseInt(right_arm_slider.value)]; renderScene(); });
+  // LEFT ARM
+  let left_arm_slider = document.getElementById("left_arm_slider");
+  left_arm_slider.addEventListener('mousemove', () => { puppycat.angles.arm_left = [parseInt(left_arm_slider.value), 0, 0]; renderScene(); });
 
   // LEGS
   // RIGHT
@@ -131,7 +157,14 @@ function addUIEvents() {
   
 
   let anim_toggle_button = document.getElementById("anim_toggle_button");
-  anim_toggle_button.addEventListener('click', () => { puppycat.animating = !puppycat.animating; requestAnimationFrame(tick); });
+  anim_toggle_button.addEventListener('click', () => { 
+    if (puppycat.animating) {
+      puppycat.stopAnim();
+    } else {
+      puppycat.playAnim('walkAnim');
+      requestAnimationFrame(tick);
+    }
+  });
 }
 
 function setupWebGL() {
@@ -202,12 +235,6 @@ function convertEventCoordsToGL(ev) {
   return [x, y];
 }
 
-// function updateAnimAngles() {
-//   if (g_middleAnim) {
-//     g_middleAngle = 45*Math.sin(g_seconds);
-//   }
-// }
-
 // render everything !
 function renderScene() {
 
@@ -219,7 +246,7 @@ function renderScene() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  puppycat.render(g_startTime, g_seconds);
+  puppycat.render(g_startTime, g_currentTime);
   // draw the hand cube
   // var body = new Cube(wgl, [255, 0, 0, 1]);
   // //body.matrix.setTranslate(-.25, -.5, 0.0);
@@ -247,16 +274,20 @@ function renderScene() {
 // called by browser repeatedly whenever its time
 function tick() {
   // save current time
-  g_seconds = performance.now() - g_startTime;
+  g_currentTime = performance.now();
 
   // print so we know we are running
   //console.log(performance.now());
 
+  // track performance
+  let fpsCounter = document.getElementById('fpsCounter');
+
   // draw everything
   renderScene();
 
+  let msElapsed = performance.now() - g_currentTime;
+  fpsCounter.textContent = "FPS: " + (1000 / msElapsed).toFixed(0);
+
   // tell browser to update again when it has time
-  if (puppycat.animating) {
-    requestAnimationFrame(tick);
-  }
+  requestAnimationFrame(tick);
 }

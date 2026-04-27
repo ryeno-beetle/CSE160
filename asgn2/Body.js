@@ -2,6 +2,7 @@ class Body {
     constructor(wgl, rgba) {
         this.wgl = wgl;
         this.rgba = this.convertRGB(rgba);
+        this.multiplyColor = this.convertRGB([103, 47, 138, 1]);
         this.matrix = new Matrix4();
         this.vertexBuffer = null;
         this.makeShapes();
@@ -45,6 +46,15 @@ class Body {
         arr = arr.map((e) => e/255.0);
         arr.push(1);
         return arr;
+    }
+
+    multiplyColorPlease(color, amnt) {
+        let newColor = color.map((c, i) => {
+            let mulC = c * this.multiplyColor[i];
+            return (1-amnt) * c + (amnt) * mulC;
+        })
+        newColor[3] = 1;
+        return newColor;
     }
 
     makeShapes() {
@@ -172,18 +182,17 @@ class Body {
             this.transformVertices(m, this.allVertices[i]);
             //console.log(vertices[i]);
         }
-
         this.shapes = {
-            top: new Shape(this.wgl, v_top,                 this.rgba.map((c) => {return c * 0.9})),
-            bottom: new Shape(this.wgl, v_bottom,           this.rgba.map((c) => {return c * 0.5})),
-            front_left: new Shape(this.wgl, v_front_left,   this.rgba.map((c) => {return c * 1})),
-            front: new Shape(this.wgl, v_front,             this.rgba.map((c) => {return c * 0.95})),
-            front_right: new Shape(this.wgl, v_front_right, this.rgba.map((c) => {return c * 0.9})),
-            right: new Shape(this.wgl, v_right,             this.rgba.map((c) => {return c * 0.85})),
-            back_right: new Shape(this.wgl, v_back_right,   this.rgba.map((c) => {return c * 0.8})),
-            back: new Shape(this.wgl, v_back,               this.rgba.map((c) => {return c * 0.85})),
-            back_left: new Shape(this.wgl, v_back_left,     this.rgba.map((c) => {return c * 0.9})),
-            left: new Shape(this.wgl, v_left,               this.rgba.map((c) => {return c * 0.95})),
+            top: new Shape(this.wgl, v_top,                 this.multiplyColorPlease(this.rgba, 0.05)),
+            bottom: new Shape(this.wgl, v_bottom,           this.multiplyColorPlease(this.rgba, 0.4)),
+            front_left: new Shape(this.wgl, v_front_left,   this.multiplyColorPlease(this.rgba, 0)),
+            front: new Shape(this.wgl, v_front,             this.multiplyColorPlease(this.rgba, 0.05)),
+            front_right: new Shape(this.wgl, v_front_right, this.multiplyColorPlease(this.rgba, 0.1)),
+            right: new Shape(this.wgl, v_right,             this.multiplyColorPlease(this.rgba, 0.15)),
+            back_right: new Shape(this.wgl, v_back_right,   this.multiplyColorPlease(this.rgba, 0.2)),
+            back: new Shape(this.wgl, v_back,               this.multiplyColorPlease(this.rgba, 0.15)),
+            back_left: new Shape(this.wgl, v_back_left,     this.multiplyColorPlease(this.rgba, 0.1)),
+            left: new Shape(this.wgl, v_left,               this.multiplyColorPlease(this.rgba, 0.05)),
         };
 
         // this.vertices = new Float32Array([
