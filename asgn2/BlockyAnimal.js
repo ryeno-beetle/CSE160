@@ -84,7 +84,9 @@ function main() {
     if (mouseDown) {
       g_globalAngle_y = initialAngle_y + (initial_x - ev.clientX);
       g_globalAngle_x = initialAngle_x + (initial_y - ev.clientY);
-      renderScene();
+      if (!puppycat.animating) {
+        renderScene();
+      }
     }
   }
 
@@ -92,7 +94,7 @@ function main() {
   addUIEvents();
 
   // Specify the color for clearing <canvas>
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clearColor(113/255, 138/255, 209/255, 1.0);
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);

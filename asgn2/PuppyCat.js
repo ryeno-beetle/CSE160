@@ -73,7 +73,7 @@ class PuppyCat {
             foot_right: new Body(this.wgl, brown),
 
             // FLOOR??
-            floor: new Cube(this.wgl, [166, 146, 214, 1])
+            //floor: new Cube(this.wgl, [166, 146, 214, 1])
         }
 
         this.parts.body.setOrigin([0.34 * 0.9, 0, 0.34 * 0.9]);
@@ -101,16 +101,16 @@ class PuppyCat {
     transformParts() {
         //remember: Translate then Rotate then Save then Scale
         // floor
-        this.parts.floor.matrix = new Matrix4();
-        let m_floor = this.parts.floor.matrix;
-        m_floor.translate(-0.5, -1.605, -0.6);
+        // this.parts.floor.matrix = new Matrix4();
+        // let m_floor = this.parts.floor.matrix;
+        // m_floor.translate(-0.5, -1.605, -0.6);
 
         // BODY TRANSFORMS
         // reset and save ref to matrix
         this.parts.body.resetMatrix();
         let m_body = this.parts.body.matrix;
-        // translate to be at origin
-        m_body.translate(0, -0.34 * 0.9, 0);
+        // translate to be centered
+        m_body.translate(0, -0.34 * 0.9 - 0.1, 0);
         // apply current translation
         this.translatePart(m_body, 'body');
         // apply current rotation
