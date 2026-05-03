@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>paint!</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <script src="lib/webgl-utils.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+    <script src="lib/cuon-utils.js"></script>
+    <script src="lib/cuon-matrix-cse160.js"></script>
+    <script src="Shape.js"></script>
+    <script src="Shape2.js"></script>
+    <script src="Cube.js"></script>
+    <script src="Body.js"></script>
+    <script src="PuppyCat.js"></script>
+    <script src="VirtualWorld.js"></script>
+
+    <div id="ui">
+      <div>
+        <p id="fpsCounter">FPS: </p>
+        <div>
+          <h3>rotation:</h3>
+          <label>x-axis: </label>
+          <input type="range" min="-180" max="180" value="0" class="slider" id="angle_y_slider"/>
+          <label>y-axis: </label>
+          <input type="range" min="-180" max="180" value="0" class="slider" id="angle_x_slider"/>
+        </div>
+        <div>
+          <h3>animation:</h3>
+          <button type="button" id="anim_toggle_button">ON/OFF</button>
+        </div>
+        <div>
+          <h3>joint control</h3>
+          <label>head:</label>
+          <input type="range" min="-20" max="20" value="0" class="slider" id="head_slider"/>          
+          <label>bell:</label>
+          <input type="range" min="-5" max="5" value="0" class="slider" id="bell_slider"/>          
+          <p></p>
+          <label>tail base:</label>
+          <input type="range" min="-20" max="20" value="0" class="slider" id="tail_base_slider"/>      
+          <label>tail end:</label>
+          <input type="range" min="0" max="20" value="0" class="slider" id="tail_end_slider"/>          
+          <p></p>
+          <label>right arm:</label>
+          <input type="range" min="-75" max="75" value="0" class="slider" id="right_arm_slider"/>
+          <label>left arm:</label>
+          <input type="range" min="-75" max="75" value="0" class="slider" id="left_arm_slider"/>          
+          <p></p>
+          <label>right leg:</label>
+          <input type="range" min="-30" max="30" value="0" class="slider" id="right_leg_slider"/>
+          <label>left leg:</label>
+          <input type="range" min="-30" max="30" value="0" class="slider" id="left_leg_slider"/>
+          <p></p>
+          <label>right knee:</label>
+          <input type="range" min="-30" max="0" value="0" class="slider" id="right_knee_slider"/>
+          <label>left knee:</label>
+          <input type="range" min="-30" max="0" value="0" class="slider" id="left_knee_slider"/>
+          <p></p>
+          <label>right ankle:</label>
+          <input type="range" min="-20" max="20" value="0" class="slider" id="right_ankle_slider"/>
+          <label>left ankle:</label>
+          <input type="range" min="-20" max="20" value="0" class="slider" id="left_ankle_slider"/>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
