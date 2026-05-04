@@ -8,17 +8,16 @@
 */
 // ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
-  // uniform mat4 u_ViewMatrix;
-  // uniform mat4 u_ProjectionMatrix;
-  // u_ProjectionMatrix * u_ViewMatrix * 
 var VSHADER_SOURCE = `
   attribute vec4 a_Position;
   attribute vec2 a_UVCoord;
   varying vec2 v_UVCoord;
   uniform mat4 u_ModelMatrix;
   uniform mat4 u_GlobalRotateMatrix;
+  uniform mat4 u_ViewMatrix;
+  uniform mat4 u_ProjectionMatrix;
   void main() {
-    gl_Position = u_GlobalRotateMatrix * a_Position;
+    gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * a_Position;
     v_UVCoord = a_UVCoord;
   }`
 
@@ -251,18 +250,18 @@ function connectVariablesToGLSL() {
   }
 
   // Get the storage location of u_ViewMatrix
-  // u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
-  // if (u_ViewMatrix < 0) {
-  //   console.log('Failed to get the storage location of u_ViewMatrix');
-  //   return;
-  // }
+  u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
+  if (u_ViewMatrix < 0) {
+    console.log('Failed to get the storage location of u_ViewMatrix');
+    return;
+  }
 
-  // // Get the storage location of u_ProjectionMatrix
-  // u_ProjectionMatrix = gl.getUniformLocation(gl.program, 'u_ProjectionMatrix');
-  // if (u_ProjectionMatrix < 0) {
-  //   console.log('Failed to get the storage location of u_ProjectionMatrix');
-  //   return;
-  // }
+  // Get the storage location of u_ProjectionMatrix
+  u_ProjectionMatrix = gl.getUniformLocation(gl.program, 'u_ProjectionMatrix');
+  if (u_ProjectionMatrix < 0) {
+    console.log('Failed to get the storage location of u_ProjectionMatrix');
+    return;
+  }
 
   // set up wgl var
   wgl = {
@@ -343,11 +342,11 @@ function convertEventCoordsToGL(ev) {
 // render everything !
 function renderScene() {
 
-  // var projMat = new Matrix4();
-  // gl.uniformMatrix4fv(u_ProjectionMatrix, false, projMat.elements);
+  var projMat = new Matrix4();
+  gl.uniformMatrix4fv(u_ProjectionMatrix, false, projMat.elements);
 
-  // var viewMat = new Matrix4();
-  // gl.uniformMatrix4fv(u_ViewMatrix, false, viewMat.elements);
+  var viewMat = new Matrix4();
+  gl.uniformMatrix4fv(u_ViewMatrix, false, viewMat.elements);
 
   // pass matrix to u_GlobalRotateMatrix attribute
   var globalRotMat = new Matrix4().rotate(g_globalAngle_y, 0, 1, 0);
@@ -358,17 +357,7 @@ function renderScene() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   let cube = new Cube(wgl, [255, 0, 0, 1]);
-
-  let v_front = [
-            0, 0, 0,  1, 1, 0,  1, 0, 0,
-            0, 0, 0,  0, 1, 0,  1, 1, 0];
-  let uv_coords = [
-            0, 0,  1, 1,  1, 0,
-            0, 0,  0, 1,  1, 1];
-  let shape = new Shape(wgl, v_front, uv_coords, [255, 0, 0, 1]);
-
-  //shape.render();
-
+  cube.setOrigin([0.5, 0.5, 0.5]);
   cube.render();
 }
 
