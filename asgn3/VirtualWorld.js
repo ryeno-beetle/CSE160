@@ -76,7 +76,6 @@ function main() {
   };
   canvas.onmouseup = (ev) => {mouseDown = false;}
   canvas.onmousemove = (ev) => {
-    // console.log(ev);
     if (mouseDown) {
       let moveAmntH = initial_x - ev.clientX;
       let moveAmntV = initial_y - ev.clientY;
@@ -86,11 +85,9 @@ function main() {
     }
   }
   document.onkeydown = (ev) => { 
-    console.log('key down');
     cam.onKeyDown(ev);
     if (ev.key === "z") {
       deleteCubeLookingAt();
-      console.log("z pressed");
     }
   }
   document.onkeyup = (ev) => {
@@ -245,117 +242,57 @@ function deleteCubeLookingAt() {
   for (let i = 0; i < 10; i++) {
     if (ray.delta_x > 0) {
       if (castX(xm, ym, zm, ray, 1)) {
-        console.log("AAAA");
         xm += 1;
         if (deleteCubeAt(xm, ym, zm)) {
           return;
         }
         continue;
       }
-      // let new_xm = xm + 1;
-      // // get xyz of the corner of the next cube face in the x direction
-      // let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(new_xm, ym, zm);
-      // console.log("next x: ("+next_xw+", "+next_yw+", "+next_zw+")");
-      // console.log("next xm: ("+new_xm+", "+ym+", "+zm+")");
-      // // get the position of the ray at this x position
-      // let [ray_x, ray_y, ray_z] = ray.getPointFromX(next_xw);
-      // // check if this point is in the next cube face in the x direction
-      // console.log("ray x: ("+ray_x+", "+ray_y+", "+ray_z+")");
-      // if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
-      //   // if it is, move to this cube
-      //   ray.setPoint(ray_x, ray_y, ray_z);
-      //   console.log("new ray x: ("+ray.x+", "+ray.y+", "+ray.z+")");
-      //   xm = new_xm;
-      //   // check if there is a cube here
-      //   if (xm >= 0 && xm < 32 && ym >= 0 && ym < 2 && zm >= 0 && zm < 32) {
-      //     if (map[ym][xm][zm] === 1) {
-      //       map[ym][xm][zm] = 0;
-      //       deleteCube();
-      //       console.log("DELETEEEE");
-      //       return;
-      //     }
-      //   }
-      //   continue;
-      // }
     } else if (ray.delta_x < 0) {
-      let new_xm = xm - 1;
-      // get xyz of the corner of the next cube face in the neg x direction
-      let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(new_xm, ym, zm);
-      console.log("next x: ("+next_xw+", "+next_yw+", "+next_zw+")");
-      console.log("next xm: ("+new_xm+", "+ym+", "+zm+")");
-      // get the position of the ray at this x position
-      let [ray_x, ray_y, ray_z] = ray.getPointFromX(next_xw + cubeScale);
-      // check if this point is in the next cube face in the x direction
-      console.log("ray x: ("+ray_x+", "+ray_y+", "+ray_z+")");
-      if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
-        // if it is, move to this cube
-        ray.setPoint(ray_x, ray_y, ray_z);
-        console.log("new ray x: ("+ray.x+", "+ray.y+", "+ray.z+")");
-        xm = new_xm;
-        // check if there is a cube here
-        if (deleteCubeAt(xm, ym, zm)) return;
-        continue;
-      }
-    }
-    if (ray.delta_z > 0) {
-      let new_zm = zm + 1;
-      // get xyz of the corner of the next cube face in the z direction
-      let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, ym, new_zm);
-      // get the position of the ray at this z position
-      let [ray_x, ray_y, ray_z] = ray.getPointFromZ(next_zw);
-      // check if this point is in the next cube face in the z direction
-      console.log("IN Z");
-      if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_x >= next_xw && ray_x < next_xw + cubeScale) {
-        // if it is, move to this cube
-        ray.setPoint(ray_x, ray_y, ray_z);
-        zm = new_zm
-        console.log("NEW Z");
-        // check if there is a cube here
-        if (xm >= 0 && xm < 32 && ym >= 0 && ym < 2 && zm >= 0 && zm < 32) {
-          if (map[ym][xm][zm] === 1) {
-            map[ym][xm][zm] = 0;
-            deleteCube();
-            console.log("DELETEEEE");
-            return;
-          }
+      if (castX(xm, ym, zm, ray, -1)) {
+        xm -= 1;
+        if (deleteCubeAt(xm, ym, zm)) {
+          return;
         }
         continue;
       }
     }
-    if (ray.delta_y < 0) {
-      let new_ym = ym - 1;
-      // get xyz of the corner of the next cube face in the y direction
-      let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, new_ym, zm);
-      console.log("NEXT y: ("+next_xw+", "+next_yw+", "+next_zw+")");
-      console.log("next ym: ("+xm+", "+new_ym+", "+zm+")");
-      // get the position of the ray at this y position
-      let [ray_x, ray_y, ray_z] = ray.getPointFromY(next_yw + cubeScale);
-      console.log("RAY y: ("+ray_x+", "+ray_y+", "+ray_z+")");
-      // check if this point is in the next cube face in the y direction
-      if (ray_x >= next_xw && ray_x < next_xw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
-        // if it is, move to this cube
-        ray.setPoint(ray_x, ray_y, ray_z);
-        console.log("NEW RAY y: ("+ray.x+", "+ray.y+", "+ray.z+")");
-        ym = new_ym;
-        // check if there is a cube here
-        if (xm >= 0 && xm < 32 && ym >= 0 && ym < 2 && zm >= 0 && zm < 32) {
-          if (map[ym][xm][zm] === 1) {
-            map[ym][xm][zm] = 0;
-            deleteCube();
-            console.log("DELETEEEE");
-            return;
-          }
+    if (ray.delta_z > 0) {
+      if (castZ(xm, ym, zm, ray, 1)) {
+        zm += 1;
+        if (deleteCubeAt(xm, ym, zm)) {
+          return;
+        }
+        continue;
+      }
+    } else if (ray.delta_z < 0) {
+      if (castZ(xm, ym, zm, ray, -1)) {
+        zm -= 1;
+        if (deleteCubeAt(xm, ym, zm)) {
+          return;
+        }
+        continue;
+      }
+    }
+    if (ray.delta_y > 0) {
+      if (castY(xm, ym, zm, ray, 1)) {
+        ym += 1;
+        if (deleteCubeAt(xm, ym, zm)) {
+          return;
+        }
+        continue;
+      }
+    } else if (ray.delta_y < 0) {
+      if (castY(xm, ym, zm, ray, -1)) {
+        ym -= 1;
+        if (deleteCubeAt(xm, ym, zm)) {
+          return;
         }
         continue;
       }
     }
     
   }
-  // console.log(...e.elements);
-  // console.log(ray.getPoint0());
-  // console.log("("+x+", "+y+", "+z+")");
-
-  // let [x, y, z] = getMapLocFromCoords(...e.elements);
 }
 function castX(xm, ym, zm, ray, dir) {
   if (dir === 1) {
@@ -380,59 +317,64 @@ function castX(xm, ym, zm, ray, dir) {
   }
   return false;
 }
+function castY(xm, ym, zm, ray, dir) {
+  if (dir === 1) {
+    ym += 1;
+  } else {
+    ym -= 1;
+  }
+  // get xyz of the corner of the next cube face in the y direction
+  let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, ym, zm);
+  // get the position of the ray at this y position
+  let [ray_x, ray_y, ray_z] = [0, 0, 0];
+  if (dir === 1) {
+    [ray_x, ray_y, ray_z] = ray.getPointFromY(next_yw);
+  } else {
+    [ray_x, ray_y, ray_z] = ray.getPointFromY(next_yw + cubeScale);
+  }
+  // check if this point is in the next cube face in the y direction
+  if (ray_x >= next_xw && ray_x < next_xw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
+    // if it is, move to this cube
+    ray.setPoint(ray_x, ray_y, ray_z);
+    return true;
+  }
+  return false;
+}
+function castZ(xm, ym, zm, ray, dir) {
+  if (dir === 1) {
+    zm += 1;
+  } else {
+    zm -= 1;
+  }
+  // get xyz of the corner of the next cube face in the z direction
+  let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, ym, zm);
+  // get the position of the ray at this z position
+  let [ray_x, ray_y, ray_z] = [0, 0, 0];
+  if (dir === 1) {
+    [ray_x, ray_y, ray_z] = ray.getPointFromZ(next_zw);
+  } else {
+    [ray_x, ray_y, ray_z] = ray.getPointFromZ(next_zw + cubeScale);
+  }
+  // check if this point is in the next cube face in the z direction
+  if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_x >= next_xw && ray_x < next_xw + cubeScale) {
+    // if it is, move to this cube
+    ray.setPoint(ray_x, ray_y, ray_z);
+    return true;
+  }
+  return false;
+}
+
 function deleteCubeAt(x, y, z) {
   if (x >= 0 && x < 32 && y >= 0 && y < 2 && z >= 0 && z < 32) {
     if (map[y][x][z] === 1) {
       map[y][x][z] = 0;
       deleteCube();
-      console.log("DELETEEEE");
       return true;
     }
   }
   return false;
 }
 
-function deleteeCubeLookingAt() {
-  let d = cam.getDirectionVector();
-  d.mul(cubeScale);
-  let e = cam.getEyeVector();
-  // while in range
-    // check if there is a block at e
-    // move e one block in d direction
-  let [x, y, z] = getMapLocFromCoords(...e.elements);
-  // while we are out of the range of map
-  // and d is pointing in the right direction
-    // add d to get into range of map
-  // this does Not Work
-  // should probably do something with checking if line intersects 3d rectangular prism instead
-  // while (((x < 0 && d.elements[0] > 0) ||
-  //       (y < 0 && d.elements[1] > 0) ||
-  //       (z < 0 && d.elements[2] > 0)) || // XOR them
-  //       ((x > 32 && d.elements[0] < 0) ||
-  //       (y > 2 && d.elements[1] < 0) ||
-  //       (z > 32 && d.elements[2] < 0))) {
-  //   e.add(d);
-  //   console.log("aaaaaa");
-  // }
-  for (i = 0; i < 32; i++) {
-    // check if there is a block at e, delete it if so
-    [x, y, z] = getMapLocFromCoords(...e.elements);
-    if (x >= 0 && x < 32 && y >= 0 && y < 2 && z >= 0 && z < 32) {
-      if (map[y][x][z] != 0) {
-        console.log(map[y][x][z]);
-        map[y][x][z] = 0;
-        deleteCube();
-        return;
-      }
-      console.log(map[y][x][z]);
-    }
-    // move e one block in d direction
-    // just going to move e the cube width, might count some cubes twice but its good enough
-    e.add(d);
-  }
-  // while (0 <= x && x <= 32  &&  0 <= y && y <= 2  &&  0 <= z && z <= 32) {
-  // }
-}
 function getCoordsFromMapLoc(xm, ym, zm) {
   let x = (xm-16)*cubeScale
   let y = -1 + cubeScale*ym
@@ -440,11 +382,11 @@ function getCoordsFromMapLoc(xm, ym, zm) {
   return ([x, y, z]);
 }
 function getMapLocFromCoords(xw, yw, zw) {
-  console.log("INITIAL ("+xw+", "+yw+", "+zw+")");
+  // console.log("INITIAL ("+xw+", "+yw+", "+zw+")");
   let x = Math.floor(xw / cubeScale + 16);
   let y = Math.floor((yw + 1) / cubeScale);
   let z = Math.floor(zw / cubeScale + 16);
-  console.log("("+x+", "+y+", "+z+")");
+  // console.log("("+x+", "+y+", "+z+")");
   return ([x, y, z]);
 }
 function makeMap() {
@@ -536,7 +478,6 @@ function deleteCube() {
     if (map[y][x][z] === 0) {
       mapCubes.splice(i, 1);
       i --;
-      console.log("removed");
     }
   }
 }

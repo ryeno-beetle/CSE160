@@ -6,15 +6,12 @@ class Ray {
         this.x = x;
         this.y = y;
         this.z = z;
-        // console.log(this.y);
         this.step = step;
     }
     
 
     getPointFromX(x) {
         let t = (x - this.x) / this.delta_x;
-        console.log(t);
-        console.log(this.y);
         let y = this.y + (this.delta_y * t);
         let z = this.z + (this.delta_z * t);
         return ([x, y, z]);
