@@ -1,10 +1,12 @@
 class Cube {
-    constructor(wgl, rgba) {
+    constructor(wgl, rgba, textureKey, colorTextureRatio) {
         this.wgl = wgl;
         this.rgba = this.convertRGB(rgba);
         this.matrix = new Matrix4();
         this.vertexBuffers = null;
         this.allVertices = []; // list of all vertice lists
+        this.textureKey = textureKey;
+        this.colorTextureRatio = colorTextureRatio;
         this.makeFaces();
     }
 
@@ -73,12 +75,12 @@ class Cube {
         
         this.allVertices = [v_front, v_top, v_right, v_left, v_back, v_bottom];
         this.faces = {
-            front: new Shape(this.wgl, v_front, uv_coords, this.rgba.map((c) => { return c * 0.9 })),
-            top: new Shape(this.wgl, v_top, uv_coords, this.rgba.map((c) => { return c * 1 })),
-            right: new Shape(this.wgl, v_right, uv_coords, this.rgba.map((c) => { return c * 0.8 })),
-            left: new Shape(this.wgl, v_left, uv_coords, this.rgba.map((c) => { return c * 0.8 })),
-            back: new Shape(this.wgl, v_back, uv_coords, this.rgba.map((c) => { return c * 0.7 })),
-            bottom: new Shape(this.wgl, v_bottom, uv_coords, this.rgba.map((c) => { return c * 0.6 })),
+            front: new Shape(this.wgl, v_front, uv_coords, this.rgba.map((c) => { return c * 0.9 }), this.textureKey, this.colorTextureRatio),
+            top: new Shape(this.wgl, v_top, uv_coords, this.rgba.map((c) => { return c * 1 }), this.textureKey, this.colorTextureRatio),
+            right: new Shape(this.wgl, v_right, uv_coords, this.rgba.map((c) => { return c * 0.8 }), this.textureKey, this.colorTextureRatio),
+            left: new Shape(this.wgl, v_left, uv_coords, this.rgba.map((c) => { return c * 0.8 }), this.textureKey, this.colorTextureRatio),
+            back: new Shape(this.wgl, v_back, uv_coords, this.rgba.map((c) => { return c * 0.7 }), this.textureKey, this.colorTextureRatio),
+            bottom: new Shape(this.wgl, v_bottom, uv_coords, this.rgba.map((c) => { return c * 0.6 }), this.textureKey, this.colorTextureRatio),
         }
     }
 

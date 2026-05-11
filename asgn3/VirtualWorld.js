@@ -13,11 +13,10 @@ var VSHADER_SOURCE = `
   attribute vec2 a_UVCoord;
   varying vec2 v_UVCoord;
   uniform mat4 u_ModelMatrix;
-  uniform mat4 u_GlobalRotateMatrix;
   uniform mat4 u_ViewMatrix;
   uniform mat4 u_ProjectionMatrix;
   void main() {
-    gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * a_Position;
+    gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;
     v_UVCoord = a_UVCoord;
   }`
 
@@ -41,18 +40,14 @@ let u_FragColor;
 let u_texColorWeight;
 let u_Sampler;  
 let u_ModelMatrix;
-let u_GlobalRotateMatrix;
-// let u_ViewMatrix;
-// let u_ProjectionMatrix;
 // webgl obj to pass to cubes
 let wgl;
 // params
-let g_globalAngle_y = 0;
-let g_globalAngle_x = 0;
 let g_middleAngle = 0;
 let g_topAngle = 0;
 
-let puppycat;
+let cam;
+let tex;
 
 // TIME
 var g_startTime = performance.now();
@@ -75,31 +70,36 @@ function main() {
   // EVENT HANDLERS
   // click function to be called on a mouse down event
   canvas.onmousedown = (ev) => {
-    if (ev.shiftKey) {
-      if (puppycat.currentAnim != 'tripAnim') {
-        puppycat.playAnim('tripAnim');
-        g_startTime = performance.now();
-        g_currentTime = performance.now();
-        requestAnimationFrame(tick);
-      }
-    } else {
-      mouseDown = true
-      initial_x = ev.clientX;
-      initial_y = ev.clientY;
-      initialAngle_y = g_globalAngle_y;
-      initialAngle_x = g_globalAngle_x;
-    }
+    mouseDown = true
+    initial_x = ev.clientX;
+    initial_y = ev.clientY;
   };
   canvas.onmouseup = (ev) => {mouseDown = false;}
   canvas.onmousemove = (ev) => {
+    // console.log(ev);
     if (mouseDown) {
-      g_globalAngle_y = initialAngle_y + (initial_x - ev.clientX);
-      g_globalAngle_x = initialAngle_x + (initial_y - ev.clientY);
-      if (!puppycat.animating) {
-        renderScene();
-      }
+      let moveAmntH = initial_x - ev.clientX;
+      let moveAmntV = initial_y - ev.clientY;
+      cam.turnCamera(-moveAmntH / 100, -moveAmntV / 100);
+      initial_x = ev.clientX;
+      initial_y = ev.clientY;
     }
   }
+  document.onkeydown = (ev) => { 
+    console.log('key down');
+    cam.onKeyDown(ev);
+    if (ev.key === "z") {
+      deleteCubeLookingAt();
+      console.log("z pressed");
+    }
+  }
+  document.onkeyup = (ev) => {
+    cam.onKeyUp(ev);
+  }
+
+  cam = new Camera();
+  tex = new TextureManager();
+  initTextures();
 
   // ui events
   addUIEvents();
@@ -110,74 +110,19 @@ function main() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  puppycat = new PuppyCat(wgl);
+  // make objects
+  makeMap();
 
   // render
   requestAnimationFrame(tick);
 }
 
-function addUIEvents() {
-  // ANGLE SLIDERS
-  let angle_y_slider = document.getElementById("angle_y_slider");
-  angle_y_slider.addEventListener('mousemove', () => { g_globalAngle_y = parseInt(angle_y_slider.value); renderScene(); });
-
-  let angle_x_slider = document.getElementById("angle_x_slider");
-  angle_x_slider.addEventListener('mousemove', () => { g_globalAngle_x = parseInt(angle_x_slider.value); renderScene(); });
-
-  // HEAD
-  let head_slider = document.getElementById("head_slider");
-  head_slider.addEventListener('mousemove', () => { puppycat.angles.head = [parseInt(head_slider.value), 0, 0]; renderScene(); });
-
-  // BELL
-  let bell_slider = document.getElementById("bell_slider");
-  bell_slider.addEventListener('mousemove', () => { puppycat.angles.bell = [parseInt(bell_slider.value), 0, 0]; renderScene(); });
-
-  // TAIL
-  let tail_base_slider = document.getElementById("tail_base_slider");
-  tail_base_slider.addEventListener('mousemove', () => { puppycat.angles.tail_base = [parseInt(tail_base_slider.value), 0, 0]; renderScene(); });
-  let tail_end_slider = document.getElementById("tail_end_slider");
-  tail_end_slider.addEventListener('mousemove', () => { puppycat.angles.tail_end = [parseInt(tail_end_slider.value), 0, 0]; renderScene(); });
-
-  // ARMS
-  // RIGHT ARM
-  let right_arm_slider = document.getElementById("right_arm_slider");
-  right_arm_slider.addEventListener('mousemove', () => { puppycat.angles.arm_right = [0, 0, parseInt(right_arm_slider.value)]; renderScene(); });
-  // LEFT ARM
-  let left_arm_slider = document.getElementById("left_arm_slider");
-  left_arm_slider.addEventListener('mousemove', () => { puppycat.angles.arm_left = [parseInt(left_arm_slider.value), 0, 0]; renderScene(); });
-
-  // LEGS
-  // RIGHT
-  let right_leg_slider = document.getElementById("right_leg_slider");
-  right_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_top = [0, 0, parseInt(right_leg_slider.value)]; renderScene(); });
-  
-  let right_knee_slider = document.getElementById("right_knee_slider");
-  right_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_right_bottom = [0, 0, parseInt(right_knee_slider.value)]; renderScene(); });
-
-  let right_ankle_slider = document.getElementById("right_ankle_slider");
-  right_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_right = [0, 0, parseInt(right_ankle_slider.value)]; renderScene(); });
-
-  // LEFT
-  let left_leg_slider = document.getElementById("left_leg_slider");
-  left_leg_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_top = [0, 0, parseInt(left_leg_slider.value)]; renderScene(); });
-  
-  let left_knee_slider = document.getElementById("left_knee_slider");
-  left_knee_slider.addEventListener('mousemove', () => { puppycat.angles.leg_left_bottom = [0, 0, parseInt(left_knee_slider.value)]; renderScene(); });
-
-  let left_ankle_slider = document.getElementById("left_ankle_slider");
-  left_ankle_slider.addEventListener('mousemove', () => { puppycat.angles.foot_left = [parseInt(left_ankle_slider.value), 0, 0]; renderScene(); });
-  
-
-  let anim_toggle_button = document.getElementById("anim_toggle_button");
-  anim_toggle_button.addEventListener('click', () => { 
-    if (puppycat.animating) {
-      puppycat.stopAnim();
-    } else {
-      puppycat.playAnim('walkAnim');
-      requestAnimationFrame(tick);
-    }
-  });
+function initTextures() {
+  tex.initTexture('theodore', './textures/theodore.png', 0, gl.TEXTURE0);
+  tex.initTexture('sky', './textures/sky.png', 1, gl.TEXTURE1);
 }
+
+function addUIEvents() {}
 
 function setupWebGL() {
   // Retrieve <canvas> element
@@ -282,83 +227,358 @@ function convertEventCoordsToGL(ev) {
   return [x, y];
 }
 
-// function initVertexBuffers() {
-//   var vertexTexCoordBuffer = gl.createBuffer();
-//   gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
-//   gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
+let mapCubes = [];
+let cubeScale = 0.3;
+let map;
+function deleteCubeLookingAt() {
+  let d = cam.getDirectionVector();
+  // d.mul(cubeScale);
+  let e = cam.getEyeVector();
+  let ray = new Ray(...d.elements, ...e.elements);
+  // find first cube we would intersect with
+  // (cube at e, also cube at initial ray point)
+  let [xw, yw, zw] = ray.getPoint(); // current world coords
+  let [xm, ym, zm] = getMapLocFromCoords(...ray.getPoint());
+  // we would check if there is a cube here, but rn there will never be
+  // find next cube we would intersect with until we find an actual cube
+  // or we have tried 10 times
+  for (let i = 0; i < 10; i++) {
+    if (ray.delta_x > 0) {
+      if (castX(xm, ym, zm, ray, 1)) {
+        console.log("AAAA");
+        xm += 1;
+        if (deleteCubeAt(xm, ym, zm)) {
+          return;
+        }
+        continue;
+      }
+      // let new_xm = xm + 1;
+      // // get xyz of the corner of the next cube face in the x direction
+      // let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(new_xm, ym, zm);
+      // console.log("next x: ("+next_xw+", "+next_yw+", "+next_zw+")");
+      // console.log("next xm: ("+new_xm+", "+ym+", "+zm+")");
+      // // get the position of the ray at this x position
+      // let [ray_x, ray_y, ray_z] = ray.getPointFromX(next_xw);
+      // // check if this point is in the next cube face in the x direction
+      // console.log("ray x: ("+ray_x+", "+ray_y+", "+ray_z+")");
+      // if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
+      //   // if it is, move to this cube
+      //   ray.setPoint(ray_x, ray_y, ray_z);
+      //   console.log("new ray x: ("+ray.x+", "+ray.y+", "+ray.z+")");
+      //   xm = new_xm;
+      //   // check if there is a cube here
+      //   if (xm >= 0 && xm < 32 && ym >= 0 && ym < 2 && zm >= 0 && zm < 32) {
+      //     if (map[ym][xm][zm] === 1) {
+      //       map[ym][xm][zm] = 0;
+      //       deleteCube();
+      //       console.log("DELETEEEE");
+      //       return;
+      //     }
+      //   }
+      //   continue;
+      // }
+    } else if (ray.delta_x < 0) {
+      let new_xm = xm - 1;
+      // get xyz of the corner of the next cube face in the neg x direction
+      let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(new_xm, ym, zm);
+      console.log("next x: ("+next_xw+", "+next_yw+", "+next_zw+")");
+      console.log("next xm: ("+new_xm+", "+ym+", "+zm+")");
+      // get the position of the ray at this x position
+      let [ray_x, ray_y, ray_z] = ray.getPointFromX(next_xw + cubeScale);
+      // check if this point is in the next cube face in the x direction
+      console.log("ray x: ("+ray_x+", "+ray_y+", "+ray_z+")");
+      if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
+        // if it is, move to this cube
+        ray.setPoint(ray_x, ray_y, ray_z);
+        console.log("new ray x: ("+ray.x+", "+ray.y+", "+ray.z+")");
+        xm = new_xm;
+        // check if there is a cube here
+        if (deleteCubeAt(xm, ym, zm)) return;
+        continue;
+      }
+    }
+    if (ray.delta_z > 0) {
+      let new_zm = zm + 1;
+      // get xyz of the corner of the next cube face in the z direction
+      let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, ym, new_zm);
+      // get the position of the ray at this z position
+      let [ray_x, ray_y, ray_z] = ray.getPointFromZ(next_zw);
+      // check if this point is in the next cube face in the z direction
+      console.log("IN Z");
+      if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_x >= next_xw && ray_x < next_xw + cubeScale) {
+        // if it is, move to this cube
+        ray.setPoint(ray_x, ray_y, ray_z);
+        zm = new_zm
+        console.log("NEW Z");
+        // check if there is a cube here
+        if (xm >= 0 && xm < 32 && ym >= 0 && ym < 2 && zm >= 0 && zm < 32) {
+          if (map[ym][xm][zm] === 1) {
+            map[ym][xm][zm] = 0;
+            deleteCube();
+            console.log("DELETEEEE");
+            return;
+          }
+        }
+        continue;
+      }
+    }
+    if (ray.delta_y < 0) {
+      let new_ym = ym - 1;
+      // get xyz of the corner of the next cube face in the y direction
+      let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, new_ym, zm);
+      console.log("NEXT y: ("+next_xw+", "+next_yw+", "+next_zw+")");
+      console.log("next ym: ("+xm+", "+new_ym+", "+zm+")");
+      // get the position of the ray at this y position
+      let [ray_x, ray_y, ray_z] = ray.getPointFromY(next_yw + cubeScale);
+      console.log("RAY y: ("+ray_x+", "+ray_y+", "+ray_z+")");
+      // check if this point is in the next cube face in the y direction
+      if (ray_x >= next_xw && ray_x < next_xw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
+        // if it is, move to this cube
+        ray.setPoint(ray_x, ray_y, ray_z);
+        console.log("NEW RAY y: ("+ray.x+", "+ray.y+", "+ray.z+")");
+        ym = new_ym;
+        // check if there is a cube here
+        if (xm >= 0 && xm < 32 && ym >= 0 && ym < 2 && zm >= 0 && zm < 32) {
+          if (map[ym][xm][zm] === 1) {
+            map[ym][xm][zm] = 0;
+            deleteCube();
+            console.log("DELETEEEE");
+            return;
+          }
+        }
+        continue;
+      }
+    }
+    
+  }
+  // console.log(...e.elements);
+  // console.log(ray.getPoint0());
+  // console.log("("+x+", "+y+", "+z+")");
 
-//   var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
-//   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE*4, 0);
-//   gl.enableVertexAttribArray(a_Position);
+  // let [x, y, z] = getMapLocFromCoords(...e.elements);
+}
+function castX(xm, ym, zm, ray, dir) {
+  if (dir === 1) {
+    xm += 1;
+  } else {
+    xm -= 1;
+  }
+  // get xyz of the corner of the next cube face in the neg x direction
+  let [next_xw, next_yw, next_zw] = getCoordsFromMapLoc(xm, ym, zm);
+  // get the position of the ray at this x position
+  let [ray_x, ray_y, ray_z] = [0, 0, 0];
+  if (dir === 1) {
+    [ray_x, ray_y, ray_z] = ray.getPointFromX(next_xw);
+  } else {
+    [ray_x, ray_y, ray_z] = ray.getPointFromX(next_xw + cubeScale);
+  }
+  // check if this point is in the next cube face in the x direction
+  if (ray_y >= next_yw && ray_y < next_yw + cubeScale && ray_z >= next_zw && ray_z < next_zw + cubeScale) {
+    // if it is, move to this cube
+    ray.setPoint(ray_x, ray_y, ray_z);
+    return true;
+  }
+  return false;
+}
+function deleteCubeAt(x, y, z) {
+  if (x >= 0 && x < 32 && y >= 0 && y < 2 && z >= 0 && z < 32) {
+    if (map[y][x][z] === 1) {
+      map[y][x][z] = 0;
+      deleteCube();
+      console.log("DELETEEEE");
+      return true;
+    }
+  }
+  return false;
+}
 
-//   gl.uniform4f(u_FragColor, 1.0, 0.3, 0.3, 1);
-//   gl.uniform1f(u_texColorWeight, 0.5);
+function deleteeCubeLookingAt() {
+  let d = cam.getDirectionVector();
+  d.mul(cubeScale);
+  let e = cam.getEyeVector();
+  // while in range
+    // check if there is a block at e
+    // move e one block in d direction
+  let [x, y, z] = getMapLocFromCoords(...e.elements);
+  // while we are out of the range of map
+  // and d is pointing in the right direction
+    // add d to get into range of map
+  // this does Not Work
+  // should probably do something with checking if line intersects 3d rectangular prism instead
+  // while (((x < 0 && d.elements[0] > 0) ||
+  //       (y < 0 && d.elements[1] > 0) ||
+  //       (z < 0 && d.elements[2] > 0)) || // XOR them
+  //       ((x > 32 && d.elements[0] < 0) ||
+  //       (y > 2 && d.elements[1] < 0) ||
+  //       (z > 32 && d.elements[2] < 0))) {
+  //   e.add(d);
+  //   console.log("aaaaaa");
+  // }
+  for (i = 0; i < 32; i++) {
+    // check if there is a block at e, delete it if so
+    [x, y, z] = getMapLocFromCoords(...e.elements);
+    if (x >= 0 && x < 32 && y >= 0 && y < 2 && z >= 0 && z < 32) {
+      if (map[y][x][z] != 0) {
+        console.log(map[y][x][z]);
+        map[y][x][z] = 0;
+        deleteCube();
+        return;
+      }
+      console.log(map[y][x][z]);
+    }
+    // move e one block in d direction
+    // just going to move e the cube width, might count some cubes twice but its good enough
+    e.add(d);
+  }
+  // while (0 <= x && x <= 32  &&  0 <= y && y <= 2  &&  0 <= z && z <= 32) {
+  // }
+}
+function getCoordsFromMapLoc(xm, ym, zm) {
+  let x = (xm-16)*cubeScale
+  let y = -1 + cubeScale*ym
+  let z = (zm-16)*cubeScale
+  return ([x, y, z]);
+}
+function getMapLocFromCoords(xw, yw, zw) {
+  console.log("INITIAL ("+xw+", "+yw+", "+zw+")");
+  let x = Math.floor(xw / cubeScale + 16);
+  let y = Math.floor((yw + 1) / cubeScale);
+  let z = Math.floor(zw / cubeScale + 16);
+  console.log("("+x+", "+y+", "+z+")");
+  return ([x, y, z]);
+}
+function makeMap() {
+  map = [
+  [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  ], [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  ]];
+  for (let y = 0; y < 2; y++) {
+    for (let x = 0; x < 32; x++) {
+      for (let z = 0; z < 32; z++) {
+        if (map[y][x][z] === 1) {
+          let c = new Cube(wgl, [0, 0, 0, 1], 'theodore', 1);
+          // c.setOrigin([0.5, 0, 0.5]);
+          c.matrix.translate((x-16)*cubeScale, -1 + cubeScale*y, (z-16)*cubeScale);
+          c.matrix.scale(cubeScale, cubeScale, cubeScale);
+          mapCubes.push([c, [x, y, z]]);
+        }
+      }
+    }
+  }
+}
+function deleteCube() {
+  for (let i = 0; i < mapCubes.length; i++) {
+    let [x, y, z] = mapCubes[i][1];
+    if (map[y][x][z] === 0) {
+      mapCubes.splice(i, 1);
+      i --;
+      console.log("removed");
+    }
+  }
+}
+function renderMap() {
+  for(let i = 0; i < mapCubes.length; i++) {
+    mapCubes[i][0].render();
+  }
+}
 
-//   gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE*4, FSIZE*2);
-//   gl.enableVertexAttribArray(a_TexCoord);
-//   return n;
-// }
+function findCubeLookingAt() {
 
-// function initTextures(n) {
-//   var texture = gl.createTexture();   // Create a texture object
-//   if (!texture) {
-//     console.log('Failed to create the texture object');
-//     return false;
-//   }
-
-//   var image = new Image();  // Create the image object
-//   if (!image) {
-//     console.log('Failed to create the image object');
-//     return false;
-//   }
-//   // Register the event handler to be called on loading an image
-//   image.onload = function(){ loadTexture(n, texture, u_Sampler, image); };
-//   // Tell the browser to load an image
-//   image.src = 'theodore.png';
-
-//   return true;
-// }
-
-// function loadTexture(n, texture, u_Sampler, image) {
-//   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
-//   // Enable texture unit0
-//   gl.activeTexture(gl.TEXTURE0);
-//   // Bind the texture object to the target
-//   gl.bindTexture(gl.TEXTURE_2D, texture);
-
-//   // Set the texture parameters
-//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-//   // Set the texture image
-//   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-  
-//   // Set the texture unit 0 to the sampler
-//   gl.uniform1i(u_Sampler, 0);
-  
-//   gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
-
-//   gl.drawArrays(gl.TRIANGLE_STRIP, 0, n); // Draw the rectangle
-// }
+}
 
 // render everything !
 function renderScene() {
 
-  var projMat = new Matrix4();
-  gl.uniformMatrix4fv(u_ProjectionMatrix, false, projMat.elements);
+  cam.sendProjMat();
 
-  var viewMat = new Matrix4();
-  gl.uniformMatrix4fv(u_ViewMatrix, false, viewMat.elements);
-
-  // pass matrix to u_GlobalRotateMatrix attribute
-  var globalRotMat = new Matrix4().rotate(g_globalAngle_y, 0, 1, 0);
-  globalRotMat.rotate(g_globalAngle_x, 1, 0, 0);
-  gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
+  cam.updateAndSendViewMat();
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  let cube = new Cube(wgl, [255, 0, 0, 1]);
-  cube.setOrigin([0.5, 0.5, 0.5]);
-  cube.render();
+  // floor
+  let floor = new Cube(wgl, [255, 128, 128, 1], 'sky', 0);
+  floor.setOrigin([0.5, 1, 0.5]);
+  floor.matrix.translate(0, -1, 0);
+  floor.matrix.scale(10, 0.1, 10);
+  floor.render();
+
+  // sky box
+  let sky = new Cube(wgl, [255, 0, 0, 1], 'sky', 1)
+  sky.setOrigin([0.5, 0.5, 0.5]);
+  sky.matrix.scale(50, 50, 50);
+  sky.render();
+
+  // let cube = new Cube(wgl, [255, 0, 0, 1], 'theodore', 1);
+  // cube.setOrigin([0.5, 0.5, 0.5]);
+  // cube.render();
+
+  // map
+  renderMap();
 }
 
 // called by browser repeatedly whenever its time
