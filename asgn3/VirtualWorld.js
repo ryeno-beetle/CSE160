@@ -88,6 +88,8 @@ function main() {
     cam.onKeyDown(ev);
     if (ev.key === "z") {
       deleteCubeLookingAt();
+    } else if (ev.key === "x") {
+      placeCubeOnCubeLookingAt();
     }
   }
   document.onkeyup = (ev) => {
@@ -294,6 +296,90 @@ function deleteCubeLookingAt() {
     
   }
 }
+function placeCubeOnCubeLookingAt() {
+  let d = cam.getDirectionVector();
+  // d.mul(cubeScale);
+  let e = cam.getEyeVector();
+  let ray = new Ray(...d.elements, ...e.elements);
+  // find first cube we would intersect with
+  // (cube at e, also cube at initial ray point)
+  let [xw, yw, zw] = ray.getPoint(); // current world coords
+  let [xm, ym, zm] = getMapLocFromCoords(...ray.getPoint());
+  // we would check if there is a cube here, but rn there will never be
+  // find next cube we would intersect with until we find an actual cube
+  // or we have tried 10 times
+  for (let i = 0; i < 10; i++) {
+    if (ray.delta_x > 0) {
+      if (castX(xm, ym, zm, ray, 1)) {
+        // console.log("(" + xm + ", " + ym + ", " + zm + ")")
+        if (cubeAt(xm+1, ym, zm)) { 
+          if (addCubeAt(xm, ym, zm)) {
+            // console.log("added cube x: (" + xm + ", " + ym + ", " + zm + ")");
+            return;
+          }
+        }
+        // console.log("aa");
+        xm += 1;
+        continue;
+      }
+    } else if (ray.delta_x < 0) {
+      if (castX(xm, ym, zm, ray, -1)) {
+        if (cubeAt(xm-1, ym, zm)) {
+          if (addCubeAt(xm, ym, zm)) {
+            // console.log("added cube x: (" + xm + ", " + ym + ", " + zm + ")");
+            return;
+          }
+        }
+        xm -= 1;
+        continue;
+      }
+    }
+    if (ray.delta_z > 0) {
+      if (castZ(xm, ym, zm, ray, 1)) {
+        if (cubeAt(xm, ym, zm+1)) {
+          if (addCubeAt(xm, ym, zm)) {
+            return;
+          }
+        }
+        zm += 1;
+        continue;
+      }
+    } else if (ray.delta_z < 0) {
+      if (castZ(xm, ym, zm, ray, -1)) {
+        if (cubeAt(xm, ym, zm-1)) {
+          if (addCubeAt(xm, ym, zm)) {
+            return;
+          }
+        }
+        zm -= 1;
+        continue;
+      }
+    }
+    if (ray.delta_y > 0) {
+      if (castY(xm, ym, zm, ray, 1)) {
+        if (cubeAt(xm, ym+1, zm)) {
+          if (addCubeAt(xm, ym, zm)) {
+            return;
+          }
+        }
+        ym += 1;
+        continue;
+      }
+    } else if (ray.delta_y < 0) {
+      if (castY(xm, ym, zm, ray, -1)) {
+        if (cubeAt(xm, ym-1, zm) || ym-1 === -1) {
+          if (addCubeAt(xm, ym, zm)) {
+            // console.log("added cube Y: (" + xm + ", " + ym + ", " + zm + ")");
+            return;
+          }
+        }
+        ym -= 1;
+        continue;
+      }
+    }
+    
+  }
+}
 function castX(xm, ym, zm, ray, dir) {
   if (dir === 1) {
     xm += 1;
@@ -369,6 +455,30 @@ function deleteCubeAt(x, y, z) {
     if (map[y][x][z] === 1) {
       map[y][x][z] = 0;
       deleteCube();
+      return true;
+    }
+  }
+  return false;
+}
+function addCubeAt(x, y, z) {
+  if (inRange(x, y, z)) {
+    if (!cubeAt()) {
+      map[y][x][z] = 1;
+      addCube(x, y, z);
+      return true;
+    }
+  }
+  return false;
+}
+function inRange(x, y, z) {
+  if (x >= 0 && x < 32 && y >= 0 && y < 2 && z >= 0 && z < 32) {
+    return true;
+  }
+  return false;
+}
+function cubeAt(x, y, z) {
+  if (inRange(x, y, z)) {
+    if (map[y][x][z] === 1) {
       return true;
     }
   }
@@ -462,11 +572,7 @@ function makeMap() {
     for (let x = 0; x < 32; x++) {
       for (let z = 0; z < 32; z++) {
         if (map[y][x][z] === 1) {
-          let c = new Cube(wgl, [0, 0, 0, 1], 'theodore', 1);
-          // c.setOrigin([0.5, 0, 0.5]);
-          c.matrix.translate((x-16)*cubeScale, -1 + cubeScale*y, (z-16)*cubeScale);
-          c.matrix.scale(cubeScale, cubeScale, cubeScale);
-          mapCubes.push([c, [x, y, z]]);
+          addCube(x, y, z);
         }
       }
     }
@@ -480,6 +586,12 @@ function deleteCube() {
       i --;
     }
   }
+}
+function addCube(x, y, z) {
+  let c = new Cube(wgl, [0, 0, 0, 1], 'theodore', 1);
+  c.matrix.translate((x-16)*cubeScale, -1 + cubeScale*y, (z-16)*cubeScale);
+  c.matrix.scale(cubeScale, cubeScale, cubeScale);
+  mapCubes.push([c, [x, y, z]]);
 }
 function renderMap() {
   for(let i = 0; i < mapCubes.length; i++) {

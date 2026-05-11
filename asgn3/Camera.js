@@ -46,37 +46,6 @@ class Camera {
         }
     }
 
-    // moveForward() {
-    //     let d = new Vector3(this.at.elements).sub(this.eye);
-    //     d.normalize();
-    //     d.div(10);
-    //     this.eye.add(d);
-    //     this.at.add(d);
-    // }
-    // moveBackward() {
-    //     let d = new Vector3(this.at.elements).sub(this.eye);
-    //     d.normalize();
-    //     d.div(10);
-    //     this.eye.sub(d);
-    //     this.at.sub(d);
-    // }
-    // moveLeft() {
-    //     let d = new Vector3(this.at.elements).sub(this.eye);
-    //     let left = Vector3.cross(d, this.up);
-    //     left.normalize();
-    //     left.div(10);
-    //     this.eye.sub(left);
-    //     this.at.sub(left);
-    // }
-    // moveRight() {
-    //     let d = new Vector3(this.at.elements).sub(this.eye);
-    //     let left = Vector3.cross(d, this.up);
-    //     left.normalize();
-    //     left.div(10);
-    //     this.eye.add(left);
-    //     this.at.add(left);
-    // }
-
     turnCamera(angle_h, angle_v) {
         let d = new Vector3(this.at.elements).sub(this.eye);
         let x = d.elements[0];
@@ -130,9 +99,9 @@ class Camera {
                 this.at.add(right);
             }
         } else if (movement === 'turn_left') {
-            this.turnCamera(Math.PI/50);
+            this.turnCamera(-Math.PI/100, 0);
         } else if (movement === 'turn_right') {
-            this.turnCamera(-Math.PI/50);
+            this.turnCamera(Math.PI/100, 0);
         }
     }
 
