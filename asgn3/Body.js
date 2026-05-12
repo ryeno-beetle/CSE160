@@ -9,8 +9,8 @@ class Body {
     }
 
     // eek..
-    resetMatrix() {
-        this.matrix = new Matrix4();
+    resetMatrix(mat) {
+        this.matrix = new Matrix4(mat);
         //this.matrix.rotate(-90, 1, 0, 0);
         //this.matrix.translate(-0.34, -0.34, -0.4);
     }
@@ -172,6 +172,25 @@ class Body {
             0.03, 0.46, 0.6,  0.16, 0.26, 0.8,  0.16, 0.4, 0.8,
         ];
 
+        let uv_coords = [
+            0, 0,  1, 0,  1, 1,
+            0, 0,  1, 1,  0, 1,
+            0, 0,  1, 0,  1, 1,
+            0, 0,  1, 1,  0, 1,
+            0, 0,  1, 0,  1, 1,
+            0, 0,  1, 1,  0, 1
+        ]
+        let uv_coords_oct = [
+            0, 0,  1, 0,  1, 1,
+            0, 0,  1, 1,  0, 1,
+            0, 0,  1, 0,  1, 1,
+            0, 0,  1, 1,  0, 1,
+            0, 0,  1, 0,  1, 1,
+            0, 0,  1, 1,  0, 1,
+            0, 0,  1, 1,  0, 1,
+            0, 0,  1, 1,  0, 1
+        ]
+
         // rotate to align with webgl axis orientation, scale
         let m = new Matrix4();
         m.rotate(-90, 1, 0, 0);
@@ -182,17 +201,19 @@ class Body {
             this.transformVertices(m, this.allVertices[i]);
             //console.log(vertices[i]);
         }
+
+
         this.shapes = {
-            top: new Shape(this.wgl, v_top,                 this.multiplyColorPlease(this.rgba, 0.05)),
-            bottom: new Shape(this.wgl, v_bottom,           this.multiplyColorPlease(this.rgba, 0.4)),
-            front_left: new Shape(this.wgl, v_front_left,   this.multiplyColorPlease(this.rgba, 0)),
-            front: new Shape(this.wgl, v_front,             this.multiplyColorPlease(this.rgba, 0.05)),
-            front_right: new Shape(this.wgl, v_front_right, this.multiplyColorPlease(this.rgba, 0.1)),
-            right: new Shape(this.wgl, v_right,             this.multiplyColorPlease(this.rgba, 0.15)),
-            back_right: new Shape(this.wgl, v_back_right,   this.multiplyColorPlease(this.rgba, 0.2)),
-            back: new Shape(this.wgl, v_back,               this.multiplyColorPlease(this.rgba, 0.15)),
-            back_left: new Shape(this.wgl, v_back_left,     this.multiplyColorPlease(this.rgba, 0.1)),
-            left: new Shape(this.wgl, v_left,               this.multiplyColorPlease(this.rgba, 0.05)),
+            top: new Shape(this.wgl, v_top, uv_coords_oct,                 this.multiplyColorPlease(this.rgba, 0.05), '', 0),
+            bottom: new Shape(this.wgl, v_bottom, uv_coords_oct,           this.multiplyColorPlease(this.rgba, 0.4), '', 0),
+            front_left: new Shape(this.wgl, v_front_left, uv_coords,   this.multiplyColorPlease(this.rgba, 0), '', 0),
+            front: new Shape(this.wgl, v_front, uv_coords,             this.multiplyColorPlease(this.rgba, 0.05), '', 0),
+            front_right: new Shape(this.wgl, v_front_right, uv_coords, this.multiplyColorPlease(this.rgba, 0.1), '', 0),
+            right: new Shape(this.wgl, v_right, uv_coords,             this.multiplyColorPlease(this.rgba, 0.15), '', 0),
+            back_right: new Shape(this.wgl, v_back_right, uv_coords,   this.multiplyColorPlease(this.rgba, 0.2), '', 0),
+            back: new Shape(this.wgl, v_back, uv_coords,               this.multiplyColorPlease(this.rgba, 0.15), '', 0),
+            back_left: new Shape(this.wgl, v_back_left, uv_coords,     this.multiplyColorPlease(this.rgba, 0.1), '', 0),
+            left: new Shape(this.wgl, v_left, uv_coords,               this.multiplyColorPlease(this.rgba, 0.05), '', 0),
         };
 
         // this.vertices = new Float32Array([

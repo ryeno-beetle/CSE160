@@ -47,7 +47,11 @@ class Shape {
         gl.uniform4f(u_FragColor, this.rgba[0], this.rgba[1], this.rgba[2], 1);
 
         // pass the texture to u_Sampler variable
-        tex.setSampler(this.textureKey);
+        if (this.textureKey === '') {
+            tex.setSampler(Object.keys(tex.textures)[0]);
+        } else {
+            tex.setSampler(this.textureKey);
+        }
         
         // Pass the color/texture weight to u_texColorWeight variable
         gl.uniform1f(u_texColorWeight, this.colorTextureRatio);

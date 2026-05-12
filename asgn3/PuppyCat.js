@@ -20,6 +20,7 @@ class PuppyCat {
             body: [0, 0, 0],
             bell: [0, 0, 0],
         }
+        this.matrix = new Matrix4();
         this.makeParts();
         this.anims = {};
         this.makeWalkAnim();
@@ -39,10 +40,10 @@ class PuppyCat {
             body: new Body(this.wgl, white),
             collar: new Body(this.wgl, pink),
             bell: new Body(this.wgl, yellow),
-            bell_hole_top: new Cube(this.wgl, brown),
-            bell_hole_bottom: new Cube(this.wgl, brown),
-            tail_base: new Cube(this.wgl, white),
-            tail_end: new Cube(this.wgl, brown),
+            bell_hole_top: new Cube(this.wgl, brown, '', 0),
+            bell_hole_bottom: new Cube(this.wgl, brown, '', 0),
+            tail_base: new Cube(this.wgl, white, '', 0),
+            tail_end: new Cube(this.wgl, brown, '', 0),
             // HEAD
             head: new Body(this.wgl, white),
             ear_left: new Body(this.wgl, brown),
@@ -50,13 +51,13 @@ class PuppyCat {
             ear_right: new Body(this.wgl, brown),
             ear_right_inner: new Body(this.wgl, pink),
             // face
-            eye_left: new Cube(this.wgl, dark_brown),
-            eye_right: new Cube(this.wgl, dark_brown),
-            eyebrow_left: new Cube(this.wgl, brown),
-            eyebrow_right: new Cube(this.wgl, brown),
-            mouth_right: new Cube(this.wgl, brown),
-            mouth_left: new Cube(this.wgl, brown),
-            nose: new Cube(this.wgl, brown),
+            eye_left: new Cube(this.wgl, dark_brown, '', 0),
+            eye_right: new Cube(this.wgl, dark_brown, '', 0),
+            eyebrow_left: new Cube(this.wgl, brown, '', 0),
+            eyebrow_right: new Cube(this.wgl, brown, '', 0),
+            mouth_right: new Cube(this.wgl, brown, '', 0),
+            mouth_left: new Cube(this.wgl, brown, '', 0),
+            nose: new Cube(this.wgl, brown, '', 0),
             // LEFT ARM
             arm_left: new Body(this.wgl, white),
             hand_left: new Body(this.wgl, brown),
@@ -107,7 +108,7 @@ class PuppyCat {
 
         // BODY TRANSFORMS
         // reset and save ref to matrix
-        this.parts.body.resetMatrix();
+        this.parts.body.resetMatrix(this.matrix);
         let m_body = this.parts.body.matrix;
         // translate to be centered
         m_body.translate(0, -0.34 * 0.9 - 0.1, 0);
@@ -663,6 +664,7 @@ class PuppyCat {
                 this.stopAnim();
             } else {
                 this.playAnim(this.prevAnim);
+                return;
             }
         }
         

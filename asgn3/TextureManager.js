@@ -14,7 +14,6 @@ class TextureManager {
         // Tell the browser to load an image
         image.src = path;
         this.textures[key] = texUnit;
-        // console.log(this.textures);
         return true;
     }
 
@@ -32,6 +31,7 @@ class TextureManager {
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
         // Set the texture parameters
+        // gl.generateMipmap(gl.TEXTURE_2D);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         // Set the texture image
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
