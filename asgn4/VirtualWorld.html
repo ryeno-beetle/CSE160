@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>blocky world!</title>
+    <link rel="stylesheet" href="styles.css"/>
+  </head>
+
+  <body onload="main()">
+    <div class="container_row">
+      <div class="layer1">
+        <canvas id="webgl" width="400" height="400" style="z-index: 0;">
+        Please use a browser that supports "canvas"
+        </canvas>
+      </div>
+      <div class="layer2">
+        <canvas id="canvas2D" width="400" height="400" style="z-index: 1;">
+        </canvas>
+      </div>
+    </div>
+
+    <script src="lib/webgl-utils.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+    <script src="lib/cuon-utils.js"></script>
+    <script src="lib/cuon-matrix-cse160.js"></script>
+    <script src="Shape.js"></script>
+    <script src="Shape2.js"></script>
+    <script src="Cube.js"></script>
+    <script src="Sphere.js"></script>
+    <script src="Model.js"></script>
+    <script src="Body.js"></script>
+    <script src="PuppyCat.js"></script>
+    <script src="Camera.js"></script>
+    <script src="TextureManager.js"></script>
+    <script src="Ray.js"></script>
+    <script src="VirtualWorld.js"></script>
+
+    <div id="ui" class="container_row">
+      <div>
+        <p id="fpsCounter">FPS: </p>
+        <button id="normalButton">toggle normals</button>
+        <button id="lightButton">toggle light</button>
+        <button id="spotlightButton">toggle spotlight</button>
+        <button id="printMapButton">print map</button>
+        <div>
+          Light color: Red:
+          <input type="range" min="0" max="100" value="100" class="slider" id="lightSlideRed"/>
+          Green:
+          <input type="range" min="0" max="100" value="100" class="slider" id="lightSlideGreen"/>
+          Blue:
+          <input type="range" min="0" max="100" value="100" class="slider" id="lightSlideBlue"/>
+        </div>
+        <div>
+          Spotlight color: Red:
+          <input type="range" min="0" max="100" value="0" class="slider" id="spotlightSlideRed"/>
+          Green:
+          <input type="range" min="0" max="100" value="0" class="slider" id="spotlightSlideGreen"/>
+          Blue:
+          <input type="range" min="0" max="100" value="100" class="slider" id="spotlightSlideBlue"/>
+        </div>
+        <div>
+          <p>
+            Light position: X:
+            <input type="range" min="'-250" max="250" value="0" class="slider" id="lightSlideX"/>
+            Y:
+            <input type="range" min="'-250" max="250" value="200" class="slider" id="lightSlideY"/>
+            Z:
+            <input type="range" min="'-250" max="250" value="0" class="slider" id="lightSlideZ"/>
+          </p>
+        </div>
+        <p>CONTROLS:</p>
+        <p>WASD - move</p>
+        <p>Q/E or MOUSE DRAG - turn</p>
+        <p>Z - delete block at cursor</p>
+        <p>X - place block at cursor</p>
+      </div>
+    </div>
+  </body>
+</html>
