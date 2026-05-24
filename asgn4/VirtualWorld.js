@@ -149,6 +149,8 @@ let g_SpotlightOn = 1;
 let g_LightColor = [1, 1, 1, 1];
 let g_SpotlightColor = [0, 0, 1, 1];
 
+let lightAnimating = true;
+
 let cam;
 let tex;
 
@@ -324,6 +326,10 @@ function addUIEvents() {
       g_SpotlightOn = 1;
     }
   });
+  let lightMovementButton = document.getElementById("lightMovementButton");
+  lightMovementButton.addEventListener('click', () => { 
+    lightAnimating = !lightAnimating;
+  });
 
   // LIGHT SLIDERS
   let lightSlideRed = document.getElementById("lightSlideRed");
@@ -368,6 +374,7 @@ function addUIEvents() {
   lightSlideX.addEventListener('mousemove', (ev) => {
     if (ev.buttons == 1) {
       g_lightPos[0] = lightSlideX.value / 100;
+      console.log(lightSlideX.value);
     }
   });
   let lightSlideY = document.getElementById("lightSlideY");
@@ -974,7 +981,9 @@ function renderMap() {
 }
 
 function updateAnimationAngles() {
-  g_lightPos[0] = Math.cos(g_currentTime / 1000) * 2;
+  if (lightAnimating) {
+    g_lightPos[0] = Math.cos(g_currentTime / 1000) * 2;
+  }
 }
 
 // render everything !
