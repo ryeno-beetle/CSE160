@@ -16,6 +16,42 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { Water } from 'three/addons/objects/Water.js';
 
+// const SEAFOAM_VERTEX_SHADER = `
+//     varying vec3 vUv;
+
+//     void main() {
+//       vUv = position;
+
+//       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+//     }
+//   `;
+
+// const SEAFOAM_FRAGMENT_SHADER = `
+//     varying vec3 vUv;
+
+//     void main() {
+//       vec3 foamColor = vec3(194.0/255.0, 244.0/255.0, 1.0);
+//       float alpha = 0.0;
+
+//       vec2 pos = vec2(vUv.x, vUv.z);
+
+//       vec2 foot1 = vec2(-0.1, 1.25);
+//       float radius = 0.08;
+      
+//       float dist1 = distance(foot1, pos);
+
+//       if (dist1 < radius && vUv.y > 0.0) {
+//         alpha = 0.5;
+//       }
+
+//       // if (vUv.x > 0.0) {
+//       //   alpha = 0.3;
+//       // }
+
+//       gl_FragColor = vec4(foamColor, alpha);
+
+//     }`;
+
 const VERTEX_SHADER = `
     varying vec3 vUv;
 
@@ -333,8 +369,8 @@ function main() {
       `#include <color_fragment>
       ` + fragmentMain
     );
-    console.log(shader.vertexShader);
-    console.log(shader.fragmentShader);
+    // console.log(shader.vertexShader);
+    // console.log(shader.fragmentShader);
     shaderData.uniforms.uTime = {value: 0};
     shaderData.uniforms.uColorNear = { value: [66/255, 255/255, 233/255] };
     shaderData.uniforms.uColorFar = { value: [54/255, 137/255, 156/255] };
@@ -348,9 +384,19 @@ function main() {
   planetWater = new THREE.Mesh(geometry, waterMaterial);
   planet.add(planetWater);
 
+  // puppycat sea foam
+  // let seafoamMaterial = new THREE.ShaderMaterial( {
+  //   vertexShader: SEAFOAM_VERTEX_SHADER,
+  //   fragmentShader: SEAFOAM_FRAGMENT_SHADER,
+  //   transparent: true,
+  // } );
+  // radius += 0.01;
+  // geometry = new THREE.IcosahedronGeometry( radius, detail );
+  // let seafoam = new THREE.Mesh(geometry, seafoamMaterial);
+  // scene.add(seafoam)
+
   // sky box
   geometry = new THREE.BoxGeometry();
-  console.log(geometry);
   const loader = new THREE.TextureLoader();
   const texture = loader.load( 'sky.png' );
   texture.colorSpace = THREE.SRGBColorSpace;
