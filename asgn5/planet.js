@@ -417,7 +417,7 @@ function main() {
 
   // load puppycat and set up his animation and the movement control
   const gltfLoader = new GLTFLoader();
-  gltfLoader.load( '../puppycat.glb', (object) => {
+  gltfLoader.load( 'puppycat.glb', (object) => {
     puppycat = object;
     puppycat.scene.scale.set(0.15, 0.15, 0.15);
     puppycat.scene.position.set(0, 1.2, 1.5);
