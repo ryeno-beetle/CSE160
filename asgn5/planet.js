@@ -437,6 +437,7 @@ function main() {
     }
 
     camControl = new CameraControl(planet, puppycat.scene, animInfo, THREE);
+    addButtonEvents();
   } );
 
 
@@ -452,20 +453,18 @@ function main() {
   const light2 = new THREE.AmbientLight(color2, intensity2);
   planet.add(light2);
 
-  document.onkeydown = (ev) => {
-    camControl.onKeyDown(ev);
-  }
-  document.onkeyup = (ev) => {
-    camControl.onKeyUp(ev);
-  }
-  addButtonEvents();
-
   camera.position.z = 5;
 
   renderer.setAnimationLoop( animate );
 }
 
 function addButtonEvents() {
+  document.onkeydown = (ev) => {
+    camControl.onKeyDown(ev);
+  }
+  document.onkeyup = (ev) => {
+    camControl.onKeyUp(ev);
+  }
   let upButton = document.getElementById("up");
   upButton.addEventListener('mousedown', () => { 
     camControl.upDown();
