@@ -1,9 +1,11 @@
 // TODO: add physics to make this nicer
 
 class CameraControl {
-    constructor(target, sprite, THREE) {
+    constructor(target, sprite, spriteAnimInfo, THREE) {
+        this.THREE = THREE;
         this.target = target;
         this.sprite = sprite;
+        this.spriteAnimInfo = spriteAnimInfo;
         this.speed = 1;
         // this.keys = {
         //     forward: "w",
@@ -13,6 +15,9 @@ class CameraControl {
         // }
         // this.keys = ["w", "a", "s", "d"];
         this.dir = new THREE.Vector2(0, 0);
+        this.moveVector = new THREE.Vector2(0, 0);
+
+        this.spriteAngle = sprite.rotation;
     }
 
     onKeyDown(ev) {
@@ -26,7 +31,11 @@ class CameraControl {
             this.dir.x = 1;
         }
         // console.log(this.dir);
-        this.dir = this.dir.normalize();
+        this.moveVector.x = this.dir.x;
+        this.moveVector.y = this.dir.y;
+        this.moveVector = this.moveVector.normalize();
+        // this.dir = this.dir.normalize();
+        // this.spriteAngle.y = this.dir.angle();
     }
 
     onKeyUp(ev) {
@@ -40,7 +49,31 @@ class CameraControl {
             this.dir.x = 0;
         }
         // console.log(this.dir);
-        this.dir = this.dir.normalize();
+        this.moveVector.x = this.dir.x;
+        this.moveVector.y = this.dir.y;
+        this.moveVector = this.moveVector.normalize();
+        // this.dir = this.dir.normalize();
+        // this.spriteAngle.y = this.dir.angle();
+    }
+
+    updateSpriteAngle() {
+        let angle_cur = this.spriteAngle.y;
+        let angle_new = this.dir.angle();
+        if (angle_cur < angle_new - 0.1) { // threshold
+            if (angle_cur - angle_new < - Math.PI) {
+                this.spriteAngle.y += Math.PI * 2;
+                this.spriteAngle.y -= 0.1;
+            } else {
+                this.spriteAngle.y += 0.1;
+            }
+        } else if (angle_cur > angle_new + 0.1) { // threshold
+            if (angle_cur - angle_new > Math.PI) {
+                this.spriteAngle.y -= Math.PI * 2;
+                this.spriteAngle.y += 0.1;
+            } else {
+                this.spriteAngle.y -= 0.1;
+            }
+        }
     }
 
 
@@ -48,8 +81,26 @@ class CameraControl {
     // move rotation of target based on direction
     move(deltaTime) {
         if (this.target != null) {
-            this.target.rotation.y -= deltaTime * this.dir.x / 500;
-            this.target.rotation.x -= deltaTime * this.dir.y / 500;
+            this.target.rotateOnWorldAxis(new this.THREE.Vector3(0, -1, 1), this.moveVector.x / 200);
+            this.target.rotateOnWorldAxis(new this.THREE.Vector3(1, 0, 0), this.moveVector.y / 130);
+            // this.target.rotation.y -= deltaTime * this.moveVector.x / 500;
+            // this.target.rotation.z += deltaTime * this.moveVector.y / 500;
+        }
+        if (this.sprite != null && this.dir.length() > 0) {
+            this.updateSpriteAngle();
+            
+            // update animation
+            if (!this.spriteAnimInfo.anims[0].isRunning()) {
+                this.spriteAnimInfo.mixer.stopAllAction();
+                this.spriteAnimInfo.anims[0].play();
+            }
+            this.spriteAnimInfo.mixer.update( 1/36 );
+        } else {
+            if (!this.spriteAnimInfo.anims[1].isRunning()) {
+                this.spriteAnimInfo.mixer.stopAllAction();
+                this.spriteAnimInfo.anims[1].play();
+            }
+            this.spriteAnimInfo.mixer.update( 1/100 );
         }
     }
 }

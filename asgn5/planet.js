@@ -1,10 +1,19 @@
 /* TODO
   - resizing squishes things
   - add nicer physics to movement
+  - make the water foam not stretch like how u fixed the waves
+  - make it water material so we get lighting?
+  - turn on bilinear interpolation..
+  - make a default animation / rest pose
+  - something abt the rotation is still slightly off
+  - can we make puppycat look slightly fluffy... slash softer 
 */
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 // import { Water } from 'three/addons/objects/Water.js';
 
 const VERTEX_SHADER = `
@@ -130,6 +139,7 @@ const FRAGMENT_SHADER = `
 let scene;
 let camera;
 let renderer;
+let composer;
 
 let planet;
 let planetWater;
@@ -137,11 +147,15 @@ let waterMaterial;
 
 let puppycat;
 
+let crystals;
+
 let camControl;
 
 let totalTime = 0;
 
-let animationMixer;
+// let animationMixer;
+// let walkAnim;
+// let standAnim;
 
 
 function main() {
@@ -153,7 +167,26 @@ function main() {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
-  let material = new THREE.MeshPhongMaterial({color: 0xffefc9});
+  composer = new EffectComposer(renderer);
+  const renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  const params = {
+    threshold: 1.,
+    strength: 0.2,
+    radius: 0,
+  };
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), params.strength, params.radius, params.threshold);
+  bloomPass.threshold = params.threshold;
+  bloomPass.strength = params.strength;
+  bloomPass.radius = params.radius;
+  composer.addPass(bloomPass);
+
+  let material = new THREE.MeshPhongMaterial({
+    color: 0xffefc9, 
+    emissive: 0xffefc9,
+    emissiveIntensity: 0
+  });
   let radius = 1.5;  
   let detail = 5;  
   let geometry = new THREE.IcosahedronGeometry( radius, detail );
@@ -170,7 +203,7 @@ function main() {
     },
     vertexShader: VERTEX_SHADER,
     fragmentShader: FRAGMENT_SHADER,
-    transparent: true
+    transparent: true,
   } );
 
   // material = new THREE.MeshPhongMaterial({color: 0x9ee5ff, transparent: true, opacity: 0.7});
@@ -180,48 +213,64 @@ function main() {
   planet.add(planetWater);
 
 
+  // STAR SHAPE !!
   const shape = new THREE.Shape();
   const x = 0;
   const y = 0;
-  shape.moveTo(x + 2.5, y + 2.5);
-  shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2, y, x, y);
-  shape.bezierCurveTo(x - 3, y, x - 3, y + 3.5, x - 3, y + 3.5);
-  shape.bezierCurveTo(x - 3, y + 5.5, x - 1.5, y + 7.7, x + 2.5, y + 9.5);
-  shape.bezierCurveTo(x + 6, y + 7.7, x + 8, y + 4.5, x + 8, y + 3.5);
-  shape.bezierCurveTo(x + 8, y + 3.5, x + 8, y, x + 5, y);
-  shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
-
+  shape.moveTo(-3, 2);
+  shape.bezierCurveTo(0, 7, 0, 7, 3, 2);
+  shape.bezierCurveTo(8, 0, 8, 0, 4, -3);
+  shape.bezierCurveTo(6, -9, 6, -9, 0, -6);
+  shape.bezierCurveTo(-6, -9, -6, -9, -4, -3);
+  shape.bezierCurveTo(-8, 0, -8, 0, -3, 2);
   const extrudeSettings = {
     steps: 2,  
 
     depth: 2,  
 
     bevelEnabled: true,  
-    bevelThickness: 1,  
+    bevelThickness: 0.5,  
 
-    bevelSize: 1,  
+    bevelSize: 0.5,  
 
     bevelSegments: 2,
   };
+  const geometryStar = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  const materialStar = new THREE.MeshPhongMaterial({color: 0xfff6a1});
+  // make stars
+  let star = new THREE.Mesh(geometryStar, materialStar);
+  star.position.set(0, 0, 1.5);
+  // star.rotate();
+  star.scale.set(0.03, 0.03, 0.03);
+  planet.add(star);
+  // star point light
+  // let starLight = new THREE.PointLight(0xfff6a1, 0.3, 0, 2);
+  // star.add(starLight);
 
-  //const geometryStar = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  //let star = new THREE.Mesh(geometryStar, material);
-  //planet.add(star);
+  makeOrbitingCrystals();
 
+  // load puppycat and set up his animation and the movement control
   const gltfLoader = new GLTFLoader();
   gltfLoader.load( '../puppycat.glb', (object) => {
     puppycat = object;
     puppycat.scene.scale.set(0.15, 0.15, 0.15);
-    puppycat.scene.position.set(0, 2, 0);
-    puppycat.scene.rotation.set(0, -Math.PI / 2, 0);
+    puppycat.scene.position.set(0, 1, 1.5);
+    // let angle = Math.atan(1/1.12);
+    // console.log(angle);
+    puppycat.scene.rotation.set(Math.PI/4, -Math.PI / 2, 0);
     scene.add(puppycat.scene);
 
-    animationMixer = new THREE.AnimationMixer(puppycat.scene);
-    let clip = puppycat.animations[0];
-    let animationAction = animationMixer.clipAction( puppycat.animations[0] );
-    animationAction.play()
+    let animationMixer = new THREE.AnimationMixer(puppycat.scene);
+    let walkAnim = animationMixer.clipAction( puppycat.animations[1] );
+    let standAnim = animationMixer.clipAction( puppycat.animations[0] );
+    standAnim.play()
 
-    camControl = new CameraControl(planet, puppycat.scene, THREE);
+    let animInfo = {
+      mixer: animationMixer,
+      anims: [walkAnim, standAnim]
+    }
+
+    camControl = new CameraControl(planet, puppycat.scene, animInfo, THREE);
   } );
 
 
@@ -248,6 +297,49 @@ function main() {
   renderer.setAnimationLoop( animate );
 }
 
+function makeOrbitingCrystals() {
+  crystals = [];
+  makeCrystal(1, [0, 0, 3]);
+  makeCrystal(0.5, [0.3, 0.2, 2.7]);
+  makeCrystal(0.7, [-0.3, 0.1, 2.7]);
+}
+
+function makeCrystal(radius, position) {
+  const crystalColor = 0x21a4c2;
+  // let radius = 1;
+  let geometry = new THREE.OctahedronGeometry(radius);
+  let material = new THREE.MeshPhongMaterial({
+    color: crystalColor,
+    emissive: new THREE.Color(0, 0, 3),
+  })
+  let crystal = new THREE.Mesh(geometry, material);
+  crystal.position.set(position[0], position[1], position[2]);
+  crystal.scale.set(0.2, 0.2, 0.2);
+  planet.add(crystal);
+
+  // crystal light
+  let crystalLight = new THREE.PointLight(crystalColor, 0.4, 10, 10);
+  crystalLight.position.set(position[0], position[1], position[2]);
+  crystal.add(crystalLight);
+
+  crystals.push(crystal);
+}
+
+function orbit(obj) {
+  let x = obj.position.x;
+  let y = obj.position.y;
+  let z = obj.position.z;
+  let r = Math.sqrt(x * x + z * z); // not based on y
+  
+  let theta = Math.atan2(z, x);
+  
+  theta += 0.01;
+  x = r * Math.cos(theta)
+  z = r * Math.sin(theta)
+  
+  obj.position.set(x, y, z);
+}
+
 // function buildWaterMaterial() {
 //   waterMaterial = new THREE.ShaderMaterial( {
 //     uniforms: {
@@ -270,9 +362,13 @@ function animate( time ) {
   totalTime = time;
   waterMaterial.uniforms.uTime.value = totalTime / 1000;
 
-  if (puppycat != null) {
-    animationMixer.update( 1/36 );
+  if (camControl != null) {
     camControl.move(deltaTime);
+  }
+
+  // orbit crystals
+  for (let i = 0; i < crystals.length; i++) {
+    orbit(crystals[i]);
   }
   // buildWaterMaterial();
   // waterMaterial.attributes.needsUpdate = true; // HOW DO WE UPDATE POSITION ATTRIBUTE ,,,
@@ -281,7 +377,7 @@ function animate( time ) {
   //   planet.rotation.y = time / 1000;
   // }
   renderer.setSize( window.innerWidth, window.innerHeight );
-  renderer.render( scene, camera );
+  composer.render();
 }
 
 main();
