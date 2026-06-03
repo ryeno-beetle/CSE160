@@ -30,12 +30,7 @@ class CameraControl {
         } else if (ev.key === "d") { // RIGHT
             this.dir.x = 1;
         }
-        // console.log(this.dir);
-        this.moveVector.x = this.dir.x;
-        this.moveVector.y = this.dir.y;
-        this.moveVector = this.moveVector.normalize();
-        // this.dir = this.dir.normalize();
-        // this.spriteAngle.y = this.dir.angle();
+        this.setMoveVector();
     }
 
     onKeyUp(ev) {
@@ -48,12 +43,7 @@ class CameraControl {
         } else if (ev.key === "d" && this.dir.x > 0) { // RIGHT
             this.dir.x = 0;
         }
-        // console.log(this.dir);
-        this.moveVector.x = this.dir.x;
-        this.moveVector.y = this.dir.y;
-        this.moveVector = this.moveVector.normalize();
-        // this.dir = this.dir.normalize();
-        // this.spriteAngle.y = this.dir.angle();
+        this.setMoveVector();
     }
 
     updateSpriteAngle() {
@@ -74,6 +64,57 @@ class CameraControl {
                 this.spriteAngle.y -= 0.1;
             }
         }
+    }
+
+    // BUTTON PRESS EVENTS
+    upDown() {
+        this.dir.y = 1;
+        this.setMoveVector();
+    }
+    upUp() {
+        if (this.dir.y > 0) {
+            this.dir.y = 0;
+            this.setMoveVector();
+        }
+    }
+
+    downDown() {
+        this.dir.y = -1;
+        this.setMoveVector();
+    }
+    downUp() {
+        if (this.dir.y < 0) {
+            this.dir.y = 0;
+            this.setMoveVector();
+        }
+    }
+
+    leftDown() {
+        this.dir.x = -1;
+        this.setMoveVector();
+    }
+    leftUp() {
+        if (this.dir.x < 0) {
+            this.dir.x = 0;
+            this.setMoveVector();
+        }
+    }
+
+    rightDown() {
+        this.dir.x = 1;
+        this.setMoveVector();
+    }
+    rightUp() {
+        if (this.dir.x > 0) {
+            this.dir.x = 0;
+            this.setMoveVector();
+        }
+    }
+
+    setMoveVector() {
+        this.moveVector.x = this.dir.x;
+        this.moveVector.y = this.dir.y;
+        this.moveVector = this.moveVector.normalize();
     }
 
 
